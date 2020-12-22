@@ -1,6 +1,7 @@
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
+#include "AD5933.h"
 #include <Wire.h>
 
 // TODO
