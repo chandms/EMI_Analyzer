@@ -11,6 +11,12 @@
 #define INC_AD5933_H_
 
 #include <Wire.h>
+#include <Arduino.h>
+
+// Clock Frequency (for calculations)
+// Internal clock is 16.776 MHz
+
+#define CLK_FREQ 16776000
 
 // Device address
 
@@ -57,7 +63,7 @@
 #define GAIN1           0x01
 #define GAIN5           0x00
 
-// System Clock
+// Clock Source Setting
 
 #define EXTERN_CLOCK    0x01
 #define INTERN_CLOCK    0x00
@@ -69,14 +75,24 @@
 #define STATUS_DATA     0x02
 #define STATUS_DONE     0x04
 
-// functions
+// Set pointer and block read/write command codes
+#define SET_POINTER     0xB0
+#define BLOCK_READ      0xA1
+#define BLOCK_WRITE     0xA0
+
+// AD5933 control functions
 bool AD5933_SetStart(uint32_t start);
 bool AD5933_SetDelta(uint32_t delta);
 bool AD5933_SetSteps(uint16_t steps);
-bool AD5933_SetCycles(uint16_t cycles, uint8_t multiplier);
-bool AD5933_SetControl(uint8_t command, uint8_t range, uint8_t gain, uint8_t clock);
-bool AD5933_ReadStatus(unsigned char * buff);
-bool AD5933_ReadTemp(unsigned char * buff);
-bool AD5933_ReadData(unsigned char * buff);
+bool AD5933_SetCycles(uint16_t cycles, byte multiplier);
+bool AD5933_SetControl(byte command, byte range, byte gain, byte clock);
+bool AD5933_ReadStatus(byte * buff);
+bool AD5933_ReadTemp(byte * buff);
+bool AD5933_ReadData(byte * buff);
 
+// Wire (I2C) helper functions
+bool AD5933_SetPointer(byte reg);
+bool AD5933_Write(byte reg, byte data);
+bool AD5933_BlockWrite(byte * buff, uint8_t numBytes);
+bool AD5933_BlockRead(byte * buff, uint8_t numBytes);
 #endif /* INC_AD5933_H_ */
