@@ -1,83 +1,10 @@
-#include "FS.h"
-#include "SD.h"
-#include "SPI.h"
 #include "AD5933.h"
-#include <Wire.h>
+#include "ESP32_SD.h"
 
 // TODO
 // replace read file to send bytes to char array
 // create function that reads a config file and sets parameters
 // create function that generates a log file and writes to it
-
-// reads from a file and outputs to serial monitor. Returns true if success
-bool readFile(fs::FS &fs, const char * path)
-{
-    // open file. If fail, return false
-    File file = fs.open(path, FILE_READ);
-    if (!file) return false;
-
-    // read from the file till the end
-    while (file.available()) Serial.write(file.read());
-    
-    // close the file
-    file.close();
-
-    return true;
-}
-
-// writes to a file
-bool writeFile(fs::FS &fs, const char * path, const char * message)
-{
-    // open file and check if worked
-    File file = fs.open(path, FILE_WRITE);
-    if(!file) return false;
-
-    // write to the file and check if fail
-    if(!file.print(message))
-    {
-      file.close();
-      return false;
-    }
-
-    // close the file
-    file.close();
-
-    return true;
-}
-
-// append to a file
-bool appendFile(fs::FS &fs, const char * path, const char * message)
-{
-    // open file and check if worked
-    File file = fs.open(path, FILE_APPEND);
-    if(!file) return false;
-
-    // write to the file and check if fail
-    if(!file.print(message))
-    {
-      file.close();
-      return false;
-    }
-
-    // close the file
-    file.close();
-
-    return true;
-}
-
-// checks if SD card is mounted. Returns true if SD card is found
-bool mountSD()
-{
-  // try to mount SD card. If fail, return false
-  if (!SD.begin()) return false;
-
-  // determine card type. If no type. no SD card is attatched
-  uint8_t cardType = SD.cardType();
-  if (cardType == CARD_NONE) return false;
-
-  // if everything worked return true
-  return true;
-}
 
 void setup(){
     // begin Serial monitor on 115200 baud
