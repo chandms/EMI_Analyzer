@@ -10,18 +10,15 @@
 #ifndef INC_AD5933_H_
 #define INC_AD5933_H_
 
-#include "nrf_drv_twi.h"
-#include "nrf_log.h"
-#include "nrf_log_ctrl.h"
-#include "nrf_log_default_backends.h"
-#include <math.h>
+#include <Wire.h>
+#include <Arduino.h>
 
 // Clock Frequency (for calculations)
 // Internal clock is 16.776 MHz
 
 #define CLK_FREQ 16776000
 
-// Device address (shifted right)
+// Device address
 
 #define AD5933_ADDR     0x0D
 
@@ -83,24 +80,19 @@
 #define BLOCK_READ      0xA1
 #define BLOCK_WRITE     0xA0
 
-// get external variables from main
-extern const nrf_drv_twi_t m_twi;
-extern volatile bool m_xfer_done;
-
 // AD5933 control functions
 bool AD5933_SetStart(uint32_t start);
 bool AD5933_SetDelta(uint32_t delta);
 bool AD5933_SetSteps(uint16_t steps);
-bool AD5933_SetCycles(uint16_t cycles, uint8_t multiplier);
-bool AD5933_SetControl(uint8_t command, uint8_t range, uint8_t gain, uint8_t clock, uint8_t reset);
-bool AD5933_ReadStatus(uint8_t * buff);
-bool AD5933_ReadTemp(int * temp);
-bool AD5933_ReadData(uint8_t * buff);
+bool AD5933_SetCycles(uint16_t cycles, byte multiplier);
+bool AD5933_SetControl(byte command, byte range, byte gain, byte clock);
+bool AD5933_ReadStatus(byte * buff);
+bool AD5933_ReadTemp(byte * buff);
+bool AD5933_ReadData(byte * buff);
 
 // Wire (I2C) helper functions
-bool AD5933_SetPointer(uint8_t reg);
-bool AD5933_Write(uint8_t reg, uint8_t data);
-bool AD5933_ReadByte(uint8_t * buff);
-bool AD5933_BlockWrite(uint8_t * buff, uint8_t numuint8_ts);
-bool AD5933_BlockRead(uint8_t * buff, uint8_t numuint8_ts);
+bool AD5933_SetPointer(byte reg);
+bool AD5933_Write(byte reg, byte data);
+bool AD5933_BlockWrite(byte * buff, uint8_t numBytes);
+bool AD5933_BlockRead(byte * buff, uint8_t numBytes);
 #endif /* INC_AD5933_H_ */
