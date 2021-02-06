@@ -1,5 +1,5 @@
 /*
- *  AD5933.cpp
+ *  AD5933.c
  *
  *  Functions to control the AD5933. All conversions are done within the functions.
  *
@@ -9,39 +9,303 @@
 
 #include "AD5933.h"
 
+// starts a frequency sweep given sweep parameters
+// Arguments: 
+//	* sweep: pointer to the sweep struct
+// Return value:
+//  false if error with starting sweep
+//  true  if sweep started successfully
+bool AD5933_StartSweep(Sweep * sweep)
+{
+  // set the range, gain, clock source, and reset the AD5933
+	// Although reseting the AD5933 puts it in standby mode (according to the datasheet), 
+	// sending a reset command along with a no operation command will put the AD5933
+  // in no operation mode upon reset instead of standby mode
+  if (!AD5933_SetControl(STANDBY, sweep->range, sweep->gain, sweep->clockSource, 1)) return false;
+
+  // set the start frequency
+  if (!AD5933_SetStart(sweep->start)) return false;
+
+  // set the delta frequency
+  if (!AD5933_SetDelta(sweep->delta)) return false;
+
+  // set the number of steps
+  if (!AD5933_SetSteps(sweep->steps)) return false;
+
+  // set the number of cycles
+  if (!AD5933_SetCycles(sweep->cycles, sweep->cyclesMultiplier)) return false;
+
+  // initialize sweep with start frequency (AD5933 should already be in standby mode from the reset earlier)
+  if (!AD5933_SetControl(INIT_START_FREQ, sweep->range, sweep->gain, sweep->clockSource, 0)) return false;
+
+  // delay 100 ms, this should be more than enough settling time
+  nrf_delay_ms(100);
+
+  // start the frequency sweep
+  if (!AD5933_SetControl(START_SWEEP, sweep->range, sweep->gain, sweep->clockSource, 0)) return false;
+	
+  #ifdef DEBUG_LOG
+	NRF_LOG_INFO("Sweep start success");
+	NRF_LOG_FLUSH();
+  #endif
+	
+	// reset current sweep values
+	sweep->currentStep = 0;
+	sweep->currentFrequency = sweep->start;
+	
+	// start getting the data from the sweep
+	bool i2c_stats = true; // track twi success
+	uint8_t AD5933_status; // stores the AD5933 status
+
+  // some variable used in the gain factor approximation
+  float gs = sweep->gainFactor[0];
+  float ge = sweep->gainFactor[1];
+  uint32_t end = sweep->start + sweep->delta * sweep->steps;
+	
+	// read impedance data until sweep is complete or twi fail
+	while (((AD5933_status & STATUS_DONE) != STATUS_DONE) && i2c_stats)
+	{
+		// wait till measurement is done
+		do{
+			i2c_stats = AD5933_ReadStatus(&AD5933_status);
+			nrf_delay_ms(10);
+		} while (((AD5933_status & STATUS_DATA) != STATUS_DATA) && i2c_stats);
+		
+		// read the impedance data
+		i2c_stats = AD5933_ReadData(sweep->currentData);
+		
+		// send the data over usb (logging over RTT for now)
+		NRF_LOG_INFO("Frequency: %d Real: %d Imaginary: %d", sweep->currentFrequency, sweep->currentData[0], sweep->currentData[1]);
+		NRF_LOG_FLUSH();
+
+    // calculate the magnitude of the impedance
+    float magnitude = sqrt(pow(sweep->currentData[0], 2) + pow(sweep->currentData[1],2));
+
+    // calculate the phase of the impedance
+    int phase = atan((double) sweep->currentData[1] / sweep->currentData[0]);
+    
+    // float for the calculated gain
+    float newGain;
+
+    // check if start or end point
+    if (sweep->currentStep == 0)
+    {
+      newGain = gs;
+    }
+    else if (sweep->currentStep == sweep->steps)
+    {
+      newGain = ge;
+    }
+    else
+    {
+      // calculate the gain factor with 2 point approxamation
+      newGain = (((gs - ge) / (float)(end - sweep->start)) * (sweep->currentFrequency - sweep->start)) + gs;
+    }
+
+    // calculate the impedance using gain factor
+    int impedance = 1 / (newGain * magnitude);
+
+		NRF_LOG_INFO("Impedance: %d Phase: %d", impedance, phase);
+		NRF_LOG_FLUSH();
+
+    // increment the sweep
+		i2c_stats = AD5933_SetControl(INCREMENT_FREQ, sweep->range, sweep->gain, sweep->clockSource, 0);
+    // update sweep status
+    sweep->currentStep += 1;
+    sweep->currentFrequency += sweep->delta;
+
+		// check if the sweep is complete
+		i2c_stats = AD5933_ReadStatus(&AD5933_status);
+	}
+	
+  // sweep is done, put the AD5933 in power down mode
+  i2c_stats = AD5933_SetControl(POWER_DOWN, sweep->range, sweep->gain, sweep->clockSource, 0);
+  // reset sweep counters
+  sweep->currentStep = 0;
+  sweep->currentFrequency = sweep->start;
+
+  // sweep success
+  return true;
+}
+
+// calculates and sets the gain factor of the sweep given a calibration resistance
+// uses the starting frequency of the given sweep for the impedance measurement
+// Arguments: 
+//	* sweep:     pointer to the sweep struct
+//	calibration: the calibration resistance
+// Return value:
+//  false if error with calculating gain factor
+//  true  if sweep started successfully
+bool AD5933_CalculateGainFactor(Sweep * sweep, int calibration)
+{
+  // store the sweep's steps, delta, and start to reassign later
+  uint16_t storedSteps = sweep->steps;
+	uint32_t storedDelta = sweep->delta;
+  uint32_t storedStart = sweep->start;
+
+  // set the number of steps and delta in the sweep to zero
+  sweep->steps = 0;
+  sweep->delta = 0;
+  
+  // do 2 sweeps, one at the start of the sweep and one at the end
+  for (int i = 0; i < 2; i++)
+  {
+    sweep->start = storedStart + (i * storedSteps * storedDelta);
+
+    // start a sweep that only gets the impedance at the start frequency
+    if (!AD5933_StartSweep(sweep))
+    {
+      // set the parameters back
+      sweep->steps = storedSteps;
+      sweep->delta = storedDelta;
+      sweep->start = storedStart;
+      return false;
+    }
+
+    // calculate the magnitude of the impedance
+    float magnitude = sqrt(pow(sweep->currentData[0], 2) + pow(sweep->currentData[1],2));
+
+    // set the gain factor
+    sweep->gainFactor[i] = ((1 / (float) calibration) / magnitude);
+  }
+
+  //#ifdef DEBUG_LOG
+	NRF_LOG_INFO("Gain Factors Calculated");
+	NRF_LOG_FLUSH();
+  //#endif
+  
+  // set the steps, start, delta back
+  sweep->steps = storedSteps;
+	sweep->delta = storedDelta;
+  sweep->start = storedStart;
+
+  // success
+  return true;
+}
+
 // sets the start frequency of the frequency sweep
-// Arguments: start - The start frequency in Hz
+// Arguments: 
+//	start - The start frequency in Hz (1kHz - 100kHz)
+// Return value:
+//  false if I2C error or start frequency out of range
+//  true if no error
 bool AD5933_SetStart(uint32_t start)
 {
-  // check if start is within output frequency range
+  // check if start is outside output frequency range
   if (start < 1000 || start > 100000) return false;
-
-  // create buffer to store data to send
+	
+  // create buffer to store frequency bytes
   uint8_t buff[3];
 
   // calculate start frequency code
   start = ((float) start / (CLK_FREQ / 4)) * pow(2, 27);
 
-  // cut code into 3 uint8_ts (most significant uint8_t not needed)
-  buff[0] = (start >> 16) & 0xFF;
+  // cut code into 3 uint8_ts (most significant 4 bits not needed)
+  buff[0] = (start >> 16) & 0x0F;
   buff[1] = (start >> 8) & 0xFF;
   buff[2] = start & 0xFF;
 
+	#ifdef DEBUG_LOG
+  NRF_LOG_INFO("Sending 0x%x%x%x to register 0x%x", buff[0], buff[1], buff[2], START_FREQ_REG);
+	NRF_LOG_FLUSH();
+	#endif
+	
+	// write the buffer to the start frequency register
+	if (!AD5933_WriteBytes(buff, 3, START_FREQ_REG)) return false;
+
   return true;
 }
 
+// sets the delta (increment) frequency of the frequency sweep
+// Arguments: 
+//	delta - The delta frequency in Hz (0Hz - 100kHz)
+// Return value:
+//  false if I2C error or delta frequency out of range
+//  true if no error
 bool AD5933_SetDelta(uint32_t delta)
 {
+  // check if delta is less than 100kHz
+  if (delta > 100000) return false;
+	
+  // create buffer to store frequency bytes
+  uint8_t buff[3];
+
+  // calculate delta frequency code
+  delta = ((float) delta / (CLK_FREQ / 4)) * pow(2, 27);
+
+  // cut code into 3 uint8_ts (most significant 4 bits not needed)
+  buff[0] = (delta >> 16) & 0x0F;
+  buff[1] = (delta >> 8) & 0xFF;
+  buff[2] = delta & 0xFF;
+
+	#ifdef DEBUG_LOG
+  NRF_LOG_INFO("Sending 0x%x%x%x to register 0x%x", buff[0], buff[1], buff[2], DELTA_FREQ_REG);
+	NRF_LOG_FLUSH();
+	#endif
+	
+	// write the buffer to the delta frequency register
+	if (!AD5933_WriteBytes(buff, 3, DELTA_FREQ_REG)) return false;
+	
   return true;
 }
 
+// sets the number of steps (increments) of the frequency sweep
+// Arguments: 
+//	steps - the number of steps (0 - 511)
+// Return value:
+//  false if I2C error or steps out of range
+//  true if no error
 bool AD5933_SetSteps(uint16_t steps)
 {
+	// check if number of steps is within range
+	if (steps > 511) return false;
+	
+	// create buffer to store data
+	uint8_t buff[2];
+	
+	// split steps into the buffer
+	buff[0] = (steps >> 8) & 0x01;
+	buff[1] = steps & 0xFF;
+	
+	#ifdef DEBUG_LOG
+  NRF_LOG_INFO("Sending 0x%x%x to register 0x%x", buff[0], buff[1], NUM_STEPS_REG);
+	NRF_LOG_FLUSH();
+	#endif
+
+	// write the buffer to the number of steps register
+	if (!AD5933_WriteBytes(buff, 2, NUM_STEPS_REG)) return false;
+	
   return true;
 }
 
+// sets the number of settling times cycles between measurements
+// Arguments: 
+//	cycles     - the number of time cycles (1 - 511)
+//	multiplier - multiplier for the number of time cycles (NO_MULT, TIMES2, TIMES4)
+// Return value:
+//  false if I2C error or cycles out of range
+//  true if no error
 bool AD5933_SetCycles(uint16_t cycles, uint8_t multiplier)
 {
+	// check if the number of cycles is less than 511
+  if (cycles > 511) return false;
+
+  // create buffer to store data
+  uint8_t buff[2];
+
+  // assign bytes to buffer
+  buff[0] = ((cycles >> 8) & 0x01) | multiplier;
+  buff[1] = cycles & 0xFF;
+
+	#ifdef DEBUG_LOG
+  NRF_LOG_INFO("Sending 0x%x%x to register 0x%x", buff[0], buff[1], NUM_CYCLES_REG);
+	NRF_LOG_FLUSH();
+	#endif
+
+  // write the buffer to the time cycles register
+  if (!AD5933_WriteBytes(buff, 2, NUM_CYCLES_REG)) return false;
+
+  // success
   return true;
 }
 
@@ -64,16 +328,15 @@ bool AD5933_SetControl(uint8_t command, uint8_t range, uint8_t gain, uint8_t clo
   buff[0] = (command << 4) | ((range << 2) | gain);
   buff[1] = (reset << 4) | (clock << 3);
 	
-	#ifdef DEBUG
-	NRF_LOG_INFO("Control Byte 0: %x", buff[0]);
-	NRF_LOG_INFO("Control Byte 1: %x", buff[1]);
+	#ifdef DEBUG_LOG
+  NRF_LOG_INFO("Sending 0x%x to register 0x%x and 0x%x to register 0x%x", buff[0], CONTROL1_REG, buff[1], CONTROL2_REG);
 	NRF_LOG_FLUSH();
 	#endif
 	
   // write to each register one at a time (the datasheet specifies that a block write command cannot be used)
   // check for error
-  if (!AD5933_Write(CONTROL1_REG, buff[0])) return false;
-  return AD5933_Write(CONTROL2_REG, buff[1]);
+  if (!AD5933_Write(buff[0], CONTROL1_REG)) return false;
+  return AD5933_Write(buff[1], CONTROL2_REG);
 }
 
 // reads the status of the AD5933 and puts the data into buff
@@ -84,11 +347,19 @@ bool AD5933_SetControl(uint8_t command, uint8_t range, uint8_t gain, uint8_t clo
 //  true if no error
 bool AD5933_ReadStatus(uint8_t * buff)
 {
-  // set the pointer and check for failure
-  if (!AD5933_SetPointer(STATUS_REG)) return false;
-	
-	// read the status byte and return result
-  return AD5933_ReadByte(buff);
+  // saves result of byte read
+  bool status;
+  
+	// read the status byte
+  status = AD5933_ReadBytes(buff, 1, STATUS_REG);
+
+	#ifdef DEBUG_LOG
+	NRF_LOG_INFO("Read 0x%x from register 0x%x", buff[0], STATUS_REG);
+	NRF_LOG_FLUSH();
+	#endif
+  
+  // return status
+  return status;
 }
 
 // reads the temperature register of the AD5933 and converts it to celcius. Must first send a Measure Temperature command via AD5933_SetControl
@@ -102,11 +373,13 @@ bool AD5933_ReadTemp(int * temp)
   // create buffer to store temperature data
   uint8_t buff[2];
 
-  // set the pointer and check for failure
-  if (!AD5933_SetPointer(TEMP_REG)) return false;
-	
-	// block 2 bytes from the temperature register
-  if (!AD5933_BlockRead(buff, 2)) return false;
+  // read the temperature register
+  AD5933_ReadBytes(buff, 2, TEMP_REG);
+
+	#ifdef DEBUG_LOG
+	NRF_LOG_INFO("Read 0x%x%x from register 0x%x", buff[0], buff[1], TEMP_REG);
+	NRF_LOG_FLUSH();
+	#endif
 
   // check if temp is negative
 	if ((buff[0] & 0x20))
@@ -125,12 +398,86 @@ bool AD5933_ReadTemp(int * temp)
   return true;
 }
 
-bool AD5933_ReadData(uint8_t * buff)
+// Reads the data located in the real and imaginary data registers
+// Arguments: 
+//  * data - buffer to store 16 bit data values (imaginary and real)
+// Return value:
+//  false if I2C error
+//  true if no error
+bool AD5933_ReadData(uint16_t * data)
 {
+  // create a buffer to store the read data
+  uint8_t buff[4];
+
+  // read the data from the data register
+  if (!AD5933_ReadBytes(buff, 4, IMPEDANCE_REG)) return false;
+
+  // data is stored in 16 bit two's complement
+  // process real data into decimal
+  if (buff[0] >> 7)
+  {
+    data[0] = (((buff[0] << 8) | buff[1]) ^ 0xFFFF) + 1;
+  }
+  else
+  {
+    data[0] = ((buff[0] << 8) | buff[1]);
+  }
+
+  // process the imaginary data into decimal
+  if (buff[2] >> 7)
+  {
+    data[1] = (((buff[2] << 8) | buff[3]) ^ 0xFFFF) + 1;
+  }
+  else
+  {
+    data[1] = ((buff[2] << 8) | buff[3]);
+  }
+
+  // success
   return true;
 }
 
-// Wire helper functions
+// TWI helper functions
+
+// Reads numbytes starting at register reg
+// Arguments: 
+//  buff     - pointer to the array to store the read data
+//  numbytes - the number of bytes to read
+//  reg      - The register to read from
+// Return value:
+//  false if I2C error
+//  true if no error
+bool AD5933_ReadBytes(uint8_t * buff, uint8_t numbytes, uint8_t reg)
+{
+  // set the pointer and check for failure
+  if (!AD5933_SetPointer(reg)) return false;
+	
+	// block read numbytes from the pointer
+  if (!AD5933_BlockRead(buff, numbytes)) return false;
+
+  // success
+  return true;
+}
+
+// Writes numbytes starting at register reg
+// Arguments: 
+//  buff     - pointer to the array to the data to write
+//  numbytes - the number of bytes to write
+//  reg      - The register to write to
+// Return value:
+//  false if I2C error
+//  true if no error
+bool AD5933_WriteBytes(uint8_t * buff, uint8_t numbytes, uint8_t reg)
+{
+  // set the pointer and check for failure
+  if (!AD5933_SetPointer(reg)) return false;
+	
+	// block 2 bytes from the temperature register
+  if (!AD5933_BlockWrite(buff, numbytes)) return false;
+
+  // success
+  return true;
+}
 
 // Sets the internal pointer of the AD5933. Usually do this before block read or write
 // Arguments: 
@@ -146,6 +493,11 @@ bool AD5933_SetPointer(uint8_t reg)
 	// set data buffer
 	uint8_t buff[2] = {SET_POINTER, reg};
 	
+	#ifdef DEBUG_LOG
+	NRF_LOG_INFO("Setting Pointer to %x", reg);
+	NRF_LOG_FLUSH();
+	#endif
+	
 	// send the data
 	m_xfer_done = false;
 	err_code = nrf_drv_twi_tx(&m_twi, AD5933_ADDR, buff, sizeof(buff), false);
@@ -156,38 +508,20 @@ bool AD5933_SetPointer(uint8_t reg)
 	// wait for transfer to be done
 	while (m_xfer_done == false);
 	
-	// check if success
-	if (err_code != NRF_SUCCESS) return false;
+	// check if fail
+	if (twi_error || (err_code != NRF_SUCCESS)) return false;
 	
 	// success
 	return true;
-	
-	/* ORIGINAL CODE FOR ESP32
-  // begin I2C transmission
-  Wire.beginTransmission(AD5933_ADDR);
-
-  // write pointer command
-  Wire.write(SET_POINTER);
-
-  // write register to point to
-  Wire.write(reg);
-
-  // end transmission. If transmission failed then return false
-  if (Wire.endTransmission()) return false;
-
-  // transmission success
-  return true;
-	*/
 }
 
-// Writes one uint8_t to the specified register
 // Arguments:
 //  reg  - The register to write to
 //  data - The uint8_t to write
 // Return value:
 //  false if I2C error
 //  true if no error
-bool AD5933_Write(uint8_t reg, uint8_t data)
+bool AD5933_Write(uint8_t data, uint8_t reg)
 {
 	// stores error code
 	ret_code_t err_code;
@@ -195,6 +529,11 @@ bool AD5933_Write(uint8_t reg, uint8_t data)
 	// set data buffer
 	uint8_t buff[2] = {reg, data};
 	
+	#ifdef DEBUG_LOG
+	NRF_LOG_INFO("Writing 0x%x to register 0x%x", data, reg);
+	NRF_LOG_FLUSH();
+	#endif
+	
 	// send the data
 	m_xfer_done = false;
 	err_code = nrf_drv_twi_tx(&m_twi, AD5933_ADDR, buff, sizeof(buff), false);
@@ -205,28 +544,11 @@ bool AD5933_Write(uint8_t reg, uint8_t data)
 	// wait for transfer to be done
 	while (m_xfer_done == false);
 	
-	// check if success
-	if (err_code != NRF_SUCCESS) return false;
+	// check if fail
+	if (twi_error || (err_code != NRF_SUCCESS)) return false;
 	
 	// success
 	return true;
-	
-	/* ORIGINAL ESP32 CODE
-  // begin I2C transmission
-  Wire.beginTransmission(AD5933_ADDR);
-
-  // write address to send data
-  Wire.write(reg);
-
-  // write data to register
-  Wire.write(data);
-
-  // end transmission. If fail then return false
-  if (Wire.endTransmission()) return false;
-
-  // transmission success
-  return true;
-	*/
 }
 
 // Write numbytes (max 30) to the location of the internal pointer (set the pointer with AD5933_SetPointer)
@@ -254,6 +576,11 @@ bool AD5933_BlockWrite(uint8_t * buff, uint8_t numbytes)
 	data[0] = BLOCK_WRITE;
 	data[1] = numbytes;
 	
+	#ifdef DEBUG_LOG
+	NRF_LOG_INFO("Block Writing %d bytes to pointer", numbytes);
+	NRF_LOG_FLUSH();
+	#endif
+	
 	// set the rest of the data
 	for (int i = 0; i < numbytes; i++)
 	{
@@ -262,7 +589,7 @@ bool AD5933_BlockWrite(uint8_t * buff, uint8_t numbytes)
 	
 	// send the data
 	m_xfer_done = false;
-	err_code = nrf_drv_twi_tx(&m_twi, AD5933_ADDR, data, sizeof(data), false);
+	err_code = nrf_drv_twi_tx(&m_twi, AD5933_ADDR, data, numbytes + 2, false);
 	
 	// check for error
 	APP_ERROR_CHECK(err_code);
@@ -270,31 +597,11 @@ bool AD5933_BlockWrite(uint8_t * buff, uint8_t numbytes)
 	// wait for transfer to be done
 	while (m_xfer_done == false);
 	
-	// check if success
-	if (err_code != NRF_SUCCESS) return false;
+	// check if fail
+	if (twi_error || (err_code != NRF_SUCCESS)) return false;
 	
 	// success
 	return true;	
-	
-	/*
-  // begin I2C transmission
-  Wire.beginTransmission(AD5933_ADDR);
-
-  // write block write command code
-  Wire.write(BLOCK_WRITE);
-
-  // write number of uint8_ts being written
-  Wire.write(numbytes);
-
-  // write numbytes from buff
-  Wire.write(buff, numbytes);
-
-  // end transmission. If fail then return false
-  if (Wire.endTransmission()) return false;
-
-  // transmission success
-  return true;
-	*/
 }
 
 // Read one byte from the location of the internal pointer (set the pointer with AD6933_setPointer)
@@ -307,6 +614,11 @@ bool AD5933_ReadByte(uint8_t * buff)
 {
 	// stores error code
 	ret_code_t err_code;
+	
+	#ifdef DEBUG_LOG
+	NRF_LOG_INFO("Reading a byte from pointer");
+	NRF_LOG_FLUSH();
+	#endif
 
 	// read byte from AD5933
 	m_xfer_done = false;
@@ -318,8 +630,8 @@ bool AD5933_ReadByte(uint8_t * buff)
 	// wait for transfer to be done
 	while (m_xfer_done == false);
 	
-	// check if success
-	if (err_code != NRF_SUCCESS) return false;
+	// check if fail
+	if (twi_error || (err_code != NRF_SUCCESS)) return false;
 	
 	// success
 	return true;
@@ -340,6 +652,11 @@ bool AD5933_BlockRead(uint8_t * buff, uint8_t numbytes)
 	// set data buffer
 	uint8_t data[2] = {BLOCK_READ, numbytes};
 	
+	#ifdef DEBUG_LOG
+	NRF_LOG_INFO("Block reading %d bytes from pointer", numbytes);
+	NRF_LOG_FLUSH();
+	#endif
+	
 	// send the data to initiate block read
 	m_xfer_done = false;
 	err_code = nrf_drv_twi_tx(&m_twi, AD5933_ADDR, data, sizeof(data), false);
@@ -350,8 +667,8 @@ bool AD5933_BlockRead(uint8_t * buff, uint8_t numbytes)
 	// wait for transfer to be done
 	while (m_xfer_done == false);
 	
-	// check if success
-	if (err_code != NRF_SUCCESS) return false;
+	// check if fail
+	if (twi_error || (err_code != NRF_SUCCESS)) return false;
 	
 	// now read numbytes from the AD5933
 	m_xfer_done = false;
@@ -363,43 +680,9 @@ bool AD5933_BlockRead(uint8_t * buff, uint8_t numbytes)
 	// wait for transfer to be done
 	while (m_xfer_done == false);
 	
-	// check if success
-	if (err_code != NRF_SUCCESS) return false;
+	// check if fail
+	if (twi_error || (err_code != NRF_SUCCESS)) return false;
 	
 	// success
 	return true;
-	
-	/* ORIGINAL ESP32 CODE
-  // begin I2C transmission
-  Wire.beginTransmission(AD5933_ADDR);
-
-  // write block read command code
-  Wire.write(BLOCK_READ);
-
-  // write number of uint8_ts to read
-  Wire.write(numbytes);
-
-  // end transmission. If fail return false
-  if (Wire.endTransmission()) return false;
-
-  // request numbytes from AD5933. Check if the number of uint8_ts recieved is correct
-  if (Wire.requestFrom(AD5933_ADDR, numbytes) != (uint8_t) numbytes) return false;
-
-  // keep track of the number of uint8_ts read
-  uint8_t numRead = 0;
-
-  // read uint8_ts until none are left
-  while (Wire.available())
-  {
-    // store uint8_t in buff
-    buff[numRead] = Wire.read();
-    numRead++;
-  }
-
-  // check if numRead is equal to numbytes
-  if (numRead != numbytes) return false;
-  
-  // read success
-  return true;
-	*/
 }

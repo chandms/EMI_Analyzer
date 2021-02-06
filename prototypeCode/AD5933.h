@@ -10,6 +10,7 @@
 #ifndef INC_AD5933_H_
 #define INC_AD5933_H_
 
+#include "nrf_delay.h"
 #include "nrf_drv_twi.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -39,7 +40,7 @@
 
 // Settling Time Cycles Multipliers
 
-#define TIMES1          0x00
+#define NO_MULT         0x00
 #define TIMES2          0x01
 #define TIMES4          0x03
 
@@ -86,8 +87,36 @@
 // get external variables from main
 extern const nrf_drv_twi_t m_twi;
 extern volatile bool m_xfer_done;
+extern volatile bool twi_error;
 
-// AD5933 control functions
+// struct to hold sweep parameters
+typedef struct sweepParams
+{
+  // sweep parameters
+  uint32_t start;           // the start frequency
+  uint32_t delta;           // the size of each increment
+  uint16_t steps;           // the number of increments
+  uint16_t cycles;          // the number of settling cycle times
+  uint8_t cyclesMultiplier; // the multiplier for the settling cycle times
+  uint8_t range;            // the output excitation voltage range
+  uint8_t clockSource;      // the source of the AD599's system clock
+  uint32_t clockFrequency;  // the frequency of the clock for the AD5933
+  uint8_t gain;          // the PGA gain of the input frequency
+
+  // sweep information
+  uint16_t currentStep;      // the current step the sweep is on
+  uint32_t currentFrequency; // the current frequency of the sweep
+  uint16_t currentData[2];   // the real and imaginary impedance values of the last point of the sweep
+
+  // gain factor at start and end of sweep
+  float gainFactor[2];
+} Sweep;
+
+// AD5933 user control functions
+bool AD5933_StartSweep(Sweep * sweep);
+bool AD5933_CalculateGainFactor(Sweep * sweep, int calibration);
+
+// AD5933 control helper functions
 bool AD5933_SetStart(uint32_t start);
 bool AD5933_SetDelta(uint32_t delta);
 bool AD5933_SetSteps(uint16_t steps);
@@ -95,12 +124,14 @@ bool AD5933_SetCycles(uint16_t cycles, uint8_t multiplier);
 bool AD5933_SetControl(uint8_t command, uint8_t range, uint8_t gain, uint8_t clock, uint8_t reset);
 bool AD5933_ReadStatus(uint8_t * buff);
 bool AD5933_ReadTemp(int * temp);
-bool AD5933_ReadData(uint8_t * buff);
+bool AD5933_ReadData(uint16_t * buff);
 
 // Wire (I2C) helper functions
+bool AD5933_ReadBytes(uint8_t * buff, uint8_t numbytes, uint8_t reg);
+bool AD5933_WriteBytes(uint8_t * buff, uint8_t numbytes, uint8_t reg);
 bool AD5933_SetPointer(uint8_t reg);
-bool AD5933_Write(uint8_t reg, uint8_t data);
+bool AD5933_Write(uint8_t data, uint8_t reg);
 bool AD5933_ReadByte(uint8_t * buff);
-bool AD5933_BlockWrite(uint8_t * buff, uint8_t numuint8_ts);
-bool AD5933_BlockRead(uint8_t * buff, uint8_t numuint8_ts);
+bool AD5933_BlockWrite(uint8_t * buff, uint8_t numbytes);
+bool AD5933_BlockRead(uint8_t * buff, uint8_t numbytes);
 #endif /* INC_AD5933_H_ */
