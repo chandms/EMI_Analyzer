@@ -34,7 +34,8 @@ while(1):
     elif (cmd == 'e'):
         sweep = af.edit_sweep(sweep)
         af.print_sweep(sweep)
+    elif (cmd == 's'):
+        af.send_sweep(sweep)
     else:
         print('Input a valid command!')
-
-
+    print('')

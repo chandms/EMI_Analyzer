@@ -1,3 +1,20 @@
+import serial
+# sends the current sweep over usb
+def send_sweep(sweep):
+    # create a serial connection
+    ser = serial.Serial()
+
+    # try to connect to port COM5
+    try:
+        ser.port = 'COM5'
+    except:
+        # for some reason I couldn't put the code below here so I just
+        print('')
+
+    if not (ser.is_open):
+        print('USB connection could not be established. Aborting')
+        return
+
 # edits the current sweep
 def edit_sweep(sweep):
     # each parameter only has a certain range so we have to do this the long way
@@ -71,7 +88,8 @@ def edit_sweep(sweep):
             print('PGA Gain must be 1 or 5')
             gain = int(input('PGA Gain: '))
         sweep['gain'] = gain
-
+    
+    print('Sweep Edit Complete')
     return sweep
 
 # prints the current sweep to the console
@@ -84,7 +102,7 @@ def print_sweep(sweep):
             Time Cycles Multiplier: X{sweep.get('cyclesMultiplier')}
             Output Excitation Range: Range {sweep.get('range')}
             Clock Source: {sweep.get('clockSource')}
-            Clock Frequency: {sweep.get('clockFrequency') Hz}
+            Clock Frequency: {sweep.get('clockFrequency')} Hz
             PGA Gain: X{sweep.get('gain')}''')
 
 # prints the valid commands

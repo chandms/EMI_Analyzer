@@ -1,6 +1,4 @@
 import serial
-from pynput import keyboard
-import time
 
 # this program reads 100 lines from COM5 and then stops
 # run this program from Windows command line or it wont work
