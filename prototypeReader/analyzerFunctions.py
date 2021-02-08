@@ -15,6 +15,8 @@ def send_sweep(sweep):
         print('USB connection could not be established. Aborting')
         return
 
+    # if connection has succeeded, then send the sweep
+
 # edits the current sweep
 def edit_sweep(sweep):
     # each parameter only has a certain range so we have to do this the long way

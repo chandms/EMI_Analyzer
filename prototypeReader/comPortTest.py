@@ -1,13 +1,17 @@
 import serial
 
-# this program reads 100 lines from COM5 and then stops
+# this program reads 5 bytes from COM5 and then stops
 # run this program from Windows command line or it wont work
 
 ser = serial.Serial('COM5')
+ser.timout = None
 
-linesRead = 0
+bytesRead = 0
 
-while (linesRead < 100):
-    data = ser.readline()
+while (bytesRead < 5):
+    data = [bytesRead]
+    data = bytes(data)
+    ser.write(data)
+    data = ser.read(1)
     print(data)
-    linesRead += 1
+    bytesRead += 1
