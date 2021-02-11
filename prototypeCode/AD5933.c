@@ -9,13 +9,13 @@
 
 #include "AD5933.h"
 
-// starts a frequency sweep given sweep parameters
+// sweeps given sweep parameters, outputs the data over USB
 // Arguments: 
 //	* sweep: pointer to the sweep struct
 // Return value:
 //  false if error with starting sweep
 //  true  if sweep started successfully
-bool AD5933_StartSweep(Sweep * sweep)
+bool AD5933_Sweep(Sweep * sweep)
 {
   // set the range, gain, clock source, and reset the AD5933
 	// Although reseting the AD5933 puts it in standby mode (according to the datasheet), 
@@ -24,10 +24,10 @@ bool AD5933_StartSweep(Sweep * sweep)
   if (!AD5933_SetControl(STANDBY, sweep->range, sweep->gain, sweep->clockSource, 1)) return false;
 
   // set the start frequency
-  if (!AD5933_SetStart(sweep->start)) return false;
+  if (!AD5933_SetStart(sweep->start, sweep->clockFrequency)) return false;
 
   // set the delta frequency
-  if (!AD5933_SetDelta(sweep->delta)) return false;
+  if (!AD5933_SetDelta(sweep->delta, sweep->clockFrequency)) return false;
 
   // set the number of steps
   if (!AD5933_SetSteps(sweep->steps)) return false;
@@ -56,11 +56,6 @@ bool AD5933_StartSweep(Sweep * sweep)
 	// start getting the data from the sweep
 	bool i2c_stats = true; // track twi success
 	uint8_t AD5933_status; // stores the AD5933 status
-
-  // some variable used in the gain factor approximation
-  float gs = sweep->gainFactor[0];
-  float ge = sweep->gainFactor[1];
-  uint32_t end = sweep->start + sweep->delta * sweep->steps;
 	
 	// read impedance data until sweep is complete or twi fail
 	while (((AD5933_status & STATUS_DONE) != STATUS_DONE) && i2c_stats)
@@ -74,39 +69,25 @@ bool AD5933_StartSweep(Sweep * sweep)
 		// read the impedance data
 		i2c_stats = AD5933_ReadData(sweep->currentData);
 		
-		// send the data over usb (logging over RTT for now)
-		NRF_LOG_INFO("Frequency: %d Real: %d Imaginary: %d", sweep->currentFrequency, sweep->currentData[0], sweep->currentData[1]);
-		NRF_LOG_FLUSH();
+		// send the data over USB in this order: frequency, real, imaginary
+		uint8_t buff[8];
 
-    // calculate the magnitude of the impedance
-    float magnitude = sqrt(pow(sweep->currentData[0], 2) + pow(sweep->currentData[1],2));
+    // cut up currentFrequency into bytes
+		uint8_t * sel = (uint8_t*) &sweep->currentFrequency;
+    buff[0] = sel[0];
+    buff[1] = sel[1];
+    buff[2] = sel[2];
+    buff[3] = sel[3];
 
-    // calculate the phase of the impedance
-    int phase = atan((double) sweep->currentData[1] / sweep->currentData[0]);
-    
-    // float for the calculated gain
-    float newGain;
-
-    // check if start or end point
-    if (sweep->currentStep == 0)
-    {
-      newGain = gs;
-    }
-    else if (sweep->currentStep == sweep->steps)
-    {
-      newGain = ge;
-    }
-    else
-    {
-      // calculate the gain factor with 2 point approxamation
-      newGain = (((gs - ge) / (float)(end - sweep->start)) * (sweep->currentFrequency - sweep->start)) + gs;
-    }
-
-    // calculate the impedance using gain factor
-    int impedance = 1 / (newGain * magnitude);
-
-		NRF_LOG_INFO("Impedance: %d Phase: %d", impedance, phase);
-		NRF_LOG_FLUSH();
+    // cut up the real and imaginary impedances
+    sel = (uint8_t*) sweep->currentData;
+    buff[4] = sel[0];
+    buff[5] = sel[1];
+    buff[6] = sel[2];
+    buff[7] = sel[3];
+		
+    // send all the data over usb
+		app_usbd_cdc_acm_write(&m_app_cdc_acm, buff, 8);
 
     // increment the sweep
 		i2c_stats = AD5933_SetControl(INCREMENT_FREQ, sweep->range, sweep->gain, sweep->clockSource, 0);
@@ -128,68 +109,13 @@ bool AD5933_StartSweep(Sweep * sweep)
   return true;
 }
 
-// calculates and sets the gain factor of the sweep given a calibration resistance
-// uses the starting frequency of the given sweep for the impedance measurement
-// Arguments: 
-//	* sweep:     pointer to the sweep struct
-//	calibration: the calibration resistance
-// Return value:
-//  false if error with calculating gain factor
-//  true  if sweep started successfully
-bool AD5933_CalculateGainFactor(Sweep * sweep, int calibration)
-{
-  // store the sweep's steps, delta, and start to reassign later
-  uint16_t storedSteps = sweep->steps;
-	uint32_t storedDelta = sweep->delta;
-  uint32_t storedStart = sweep->start;
-
-  // set the number of steps and delta in the sweep to zero
-  sweep->steps = 0;
-  sweep->delta = 0;
-  
-  // do 2 sweeps, one at the start of the sweep and one at the end
-  for (int i = 0; i < 2; i++)
-  {
-    sweep->start = storedStart + (i * storedSteps * storedDelta);
-
-    // start a sweep that only gets the impedance at the start frequency
-    if (!AD5933_StartSweep(sweep))
-    {
-      // set the parameters back
-      sweep->steps = storedSteps;
-      sweep->delta = storedDelta;
-      sweep->start = storedStart;
-      return false;
-    }
-
-    // calculate the magnitude of the impedance
-    float magnitude = sqrt(pow(sweep->currentData[0], 2) + pow(sweep->currentData[1],2));
-
-    // set the gain factor
-    sweep->gainFactor[i] = ((1 / (float) calibration) / magnitude);
-  }
-
-  //#ifdef DEBUG_LOG
-	NRF_LOG_INFO("Gain Factors Calculated");
-	NRF_LOG_FLUSH();
-  //#endif
-  
-  // set the steps, start, delta back
-  sweep->steps = storedSteps;
-	sweep->delta = storedDelta;
-  sweep->start = storedStart;
-
-  // success
-  return true;
-}
-
 // sets the start frequency of the frequency sweep
 // Arguments: 
 //	start - The start frequency in Hz (1kHz - 100kHz)
 // Return value:
 //  false if I2C error or start frequency out of range
 //  true if no error
-bool AD5933_SetStart(uint32_t start)
+bool AD5933_SetStart(uint32_t start, uint32_t clkFreq)
 {
   // check if start is outside output frequency range
   if (start < 1000 || start > 100000) return false;
@@ -198,7 +124,7 @@ bool AD5933_SetStart(uint32_t start)
   uint8_t buff[3];
 
   // calculate start frequency code
-  start = ((float) start / (CLK_FREQ / 4)) * pow(2, 27);
+  start = ((float) start / (clkFreq / CLK_DIV)) * pow(2, 27);
 
   // cut code into 3 uint8_ts (most significant 4 bits not needed)
   buff[0] = (start >> 16) & 0x0F;
@@ -222,7 +148,7 @@ bool AD5933_SetStart(uint32_t start)
 // Return value:
 //  false if I2C error or delta frequency out of range
 //  true if no error
-bool AD5933_SetDelta(uint32_t delta)
+bool AD5933_SetDelta(uint32_t delta, uint32_t clkFreq)
 {
   // check if delta is less than 100kHz
   if (delta > 100000) return false;
@@ -231,7 +157,7 @@ bool AD5933_SetDelta(uint32_t delta)
   uint8_t buff[3];
 
   // calculate delta frequency code
-  delta = ((float) delta / (CLK_FREQ / 4)) * pow(2, 27);
+  delta = ((float) delta / (clkFreq / CLK_DIV)) * pow(2, 27);
 
   // cut code into 3 uint8_ts (most significant 4 bits not needed)
   buff[0] = (delta >> 16) & 0x0F;
@@ -413,25 +339,10 @@ bool AD5933_ReadData(uint16_t * data)
   if (!AD5933_ReadBytes(buff, 4, IMPEDANCE_REG)) return false;
 
   // data is stored in 16 bit two's complement
-  // process real data into decimal
-  if (buff[0] >> 7)
-  {
-    data[0] = (((buff[0] << 8) | buff[1]) ^ 0xFFFF) + 1;
-  }
-  else
-  {
-    data[0] = ((buff[0] << 8) | buff[1]);
-  }
-
-  // process the imaginary data into decimal
-  if (buff[2] >> 7)
-  {
-    data[1] = (((buff[2] << 8) | buff[3]) ^ 0xFFFF) + 1;
-  }
-  else
-  {
-    data[1] = ((buff[2] << 8) | buff[3]);
-  }
+  // this will be taken into account when it is processed by the python script later
+	// so just put them into 16 bit
+	data[0] = (buff[0] << 8) | buff[1];
+	data[1] = (buff[2] << 8) | buff[3];
 
   // success
   return true;

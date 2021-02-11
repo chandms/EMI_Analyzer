@@ -54,7 +54,7 @@
 #endif
 
 // USB defines
-static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_acm_user_event_t event);
+void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_acm_user_event_t event);
 
 #define CDC_ACM_COMM_INTERFACE  0
 #define CDC_ACM_COMM_EPIN       NRF_DRV_USBD_EPIN2
@@ -75,16 +75,17 @@ APP_USBD_CDC_ACM_GLOBAL_DEF(m_app_cdc_acm,
 );
 
 #define READ_SIZE 1
-static char m_rx_buffer[READ_SIZE];
-static char m_tx_buffer[NRF_DRV_USBD_EPSIZE];
+uint8_t m_rx_buffer[READ_SIZE];
+uint8_t m_tx_buffer[NRF_DRV_USBD_EPSIZE];
 
 // Indicates if USB rx has occured
 volatile bool rx_ready = false;
+volatile bool tx_ready = false;
 
 // function declarations
 void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context);
 void twi_init (void);
-static void usbd_user_ev_handler(app_usbd_event_type_t event);
+void usbd_user_ev_handler(app_usbd_event_type_t event);
 void init_usb(void);
 
 // get the TWI instance
@@ -103,6 +104,7 @@ int main(void)
 {
 	bool i2c_stats;						// stores if i2c success
 	uint8_t AD5933_status;		// to store the status
+	ret_code_t ret;						// stores the usb status
 	
   // create new sweep
 	Sweep sweep;
@@ -127,6 +129,17 @@ int main(void)
 	// reset the AD5933
 	i2c_stats = AD5933_SetControl(NO_OPERATION, RANGE1, GAIN1, INTERN_CLOCK, 1);
 	
+	// set the default sweep parameters
+	sweep.start = 1000;
+	sweep.delta = 100;
+	sweep.steps = 5;
+	sweep.cycles = 15;
+	sweep.cyclesMultiplier = NO_MULT;
+	sweep.range = RANGE1;
+	sweep.clockSource = INTERN_CLOCK;
+	sweep.clockFrequency = CLK_FREQ;
+	sweep.gain = GAIN1;
+	
 	#ifdef DEBUG_LOG
 	if (i2c_stats) {NRF_LOG_INFO("AD5933 Connected");}
 	else {NRF_LOG_INFO("AD5933 Connection Failed");}
@@ -139,12 +152,41 @@ int main(void)
 		// wait for USB to be ready
 		while (app_usbd_event_queue_process());
 		
-		// if usb data is ready, send it back
+		// if there is data over usb, read one byte
 		if (rx_ready)
 		{
-			uint8_t buff[1];
-			app_usbd_cdc_acm_read(&m_app_cdc_acm, buff, 1);
-			app_usbd_cdc_acm_write(&m_app_cdc_acm, buff, 1);
+			do
+			{
+				// the first byte is the command
+				
+				// 1: Check Connection, send back 1
+				if (m_rx_buffer[0] == 1)
+				{
+					// send back 1
+					m_tx_buffer[0] = 1;
+					app_usbd_cdc_acm_write(&m_app_cdc_acm, m_tx_buffer, 1);
+				}
+				
+				// 3: Execute Sweep, send back 3 then start a sweep
+				if (m_rx_buffer[0] == 3)
+				{
+					// send back 3
+					m_tx_buffer[0] = 3;
+					app_usbd_cdc_acm_write(&m_app_cdc_acm, m_tx_buffer, 1);
+					
+					// start a sweep
+					AD5933_Sweep(&sweep);
+					
+          // send a data point with empty values
+          // this will signify the python script to stop reading serial data
+					uint8_t buff[8] = {0};
+					app_usbd_cdc_acm_write(&m_app_cdc_acm, buff, 8);
+				}
+				
+				ret = app_usbd_cdc_acm_read(&m_app_cdc_acm, m_rx_buffer, 1);
+			} while(ret == NRF_SUCCESS);
+			// reset rx_ready
+			bsp_board_led_invert(1);
 			rx_ready = false;
 		}
 		
@@ -154,7 +196,7 @@ int main(void)
 }
 
 // USB event handler
-static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
+void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
                                     app_usbd_cdc_acm_user_event_t event)
 {
     app_usbd_cdc_acm_t const * p_cdc_acm = app_usbd_cdc_acm_class_get(p_inst);
@@ -163,10 +205,10 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
     {
         case APP_USBD_CDC_ACM_USER_EVT_PORT_OPEN:
         {
-            /*Setup first transfer*/
-            ret_code_t ret = app_usbd_cdc_acm_read(&m_app_cdc_acm, m_rx_buffer, READ_SIZE);
-            UNUSED_VARIABLE(ret);
-            break;
+					/*Setup first transfer*/
+					ret_code_t ret = app_usbd_cdc_acm_read(&m_app_cdc_acm, m_rx_buffer, READ_SIZE);
+					UNUSED_VARIABLE(ret);
+					break;
         }
         case APP_USBD_CDC_ACM_USER_EVT_PORT_CLOSE:
             break;
@@ -184,7 +226,7 @@ static void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
 }
 
 // USB user event handler
-static void usbd_user_ev_handler(app_usbd_event_type_t event)
+void usbd_user_ev_handler(app_usbd_event_type_t event)
 {
     switch (event)
     {

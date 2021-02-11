@@ -12,15 +12,31 @@
 
 #include "nrf_delay.h"
 #include "nrf_drv_twi.h"
+#include "app_usbd_core.h"
+#include "app_usbd.h"
+#include "app_usbd_string_desc.h"
+#include "app_usbd_cdc_acm.h"
+#include "app_usbd_serial_num.h"
+#ifdef DEBUG_LOG
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
+#endif
 #include <math.h>
 
 // Clock Frequency (for calculations)
 // Internal clock is 16.776 MHz
 
 #define CLK_FREQ 16776000
+
+// Clock Frequency Divider for Calculations
+// If using the AD5934, define AD5934 at compile
+#ifdef AD5934
+#define CLK_DIV 16
+#endif
+#ifndef AD5934
+#define CLK_DIV 4
+#endif
 
 // Device address (shifted right)
 
@@ -88,6 +104,7 @@
 extern const nrf_drv_twi_t m_twi;
 extern volatile bool m_xfer_done;
 extern volatile bool twi_error;
+extern const app_usbd_cdc_acm_t m_app_cdc_acm;
 
 // struct to hold sweep parameters
 typedef struct sweepParams
@@ -107,18 +124,14 @@ typedef struct sweepParams
   uint16_t currentStep;      // the current step the sweep is on
   uint32_t currentFrequency; // the current frequency of the sweep
   uint16_t currentData[2];   // the real and imaginary impedance values of the last point of the sweep
-
-  // gain factor at start and end of sweep
-  float gainFactor[2];
 } Sweep;
 
 // AD5933 user control functions
-bool AD5933_StartSweep(Sweep * sweep);
-bool AD5933_CalculateGainFactor(Sweep * sweep, int calibration);
+bool AD5933_Sweep(Sweep * sweep);
 
 // AD5933 control helper functions
-bool AD5933_SetStart(uint32_t start);
-bool AD5933_SetDelta(uint32_t delta);
+bool AD5933_SetStart(uint32_t start, uint32_t clkFreq);
+bool AD5933_SetDelta(uint32_t delta, uint32_t clkFreq);
 bool AD5933_SetSteps(uint16_t steps);
 bool AD5933_SetCycles(uint16_t cycles, uint8_t multiplier);
 bool AD5933_SetControl(uint8_t command, uint8_t range, uint8_t gain, uint8_t clock, uint8_t reset);
