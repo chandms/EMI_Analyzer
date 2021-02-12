@@ -74,10 +74,15 @@ def execute_sweep():
     imp = [0, 0] # stores the impedance data 0:real 1:imaginary
     data = [] # list to store the data
 
+    # open a file for testing
+    f = open('./data', 'ab')
+
+
     # get data from the sweep, if the current frequency is 3, then the sweep is done
     while (True):
         # read a data point from the sensor
         buff = ser.read(8)
+        f.write(buff)
         
         # if the frequency of the data point is 0 (which is not possible on the AD5933) then the sweep is done
         freq = int.from_bytes(buff[0:4], "little", signed=False)
@@ -91,6 +96,7 @@ def execute_sweep():
         # each element of data is a tuple with the freq, real, and imaginary
         data.append((freq, imp[0], imp[1]))
 
+    f.close()
     return data
 
 # sends the current sweep over usb
