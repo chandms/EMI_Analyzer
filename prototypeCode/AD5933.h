@@ -52,7 +52,8 @@
 #define NUM_CYCLES_REG  0x8A
 #define STATUS_REG      0x8F
 #define TEMP_REG        0x92
-#define IMPEDANCE_REG   0x94
+#define REAL_REG   			0x94
+#define IMAG_REG				0x96
 
 // Settling Time Cycles Multipliers
 
@@ -123,7 +124,7 @@ typedef struct sweepParams
   // sweep information
   uint16_t currentStep;      // the current step the sweep is on
   uint32_t currentFrequency; // the current frequency of the sweep
-  uint16_t currentData[2];   // the real and imaginary impedance values of the last point of the sweep
+  uint8_t currentData[4];   // the real and imaginary impedance values of the last point of the sweep
 } Sweep;
 
 // AD5933 user control functions
@@ -137,7 +138,7 @@ bool AD5933_SetCycles(uint16_t cycles, uint8_t multiplier);
 bool AD5933_SetControl(uint8_t command, uint8_t range, uint8_t gain, uint8_t clock, uint8_t reset);
 bool AD5933_ReadStatus(uint8_t * buff);
 bool AD5933_ReadTemp(int * temp);
-bool AD5933_ReadData(uint16_t * buff);
+bool AD5933_ReadData(uint8_t * buff);
 
 // Wire (I2C) helper functions
 bool AD5933_ReadBytes(uint8_t * buff, uint8_t numbytes, uint8_t reg);

@@ -1,5 +1,58 @@
 import serial
+import math
+import numpy as np
+import pandas as pd
+import struct
 
+def output_csv(df):
+    name = input('File Name: ')
+
+    df.to_csv(f'savedData\{name}.csv')
+    print(f'Saved To: ./savedData/{name}.csv')
+
+def create_dataframe(data):
+    df = pd.DataFrame(data, columns=['Frequency', 'Impedance', 'Phase'])
+
+    return df
+
+def get_impedance(gain):
+    data = execute_sweep()
+    imp = calc_impedance(data, gain)
+
+    return imp
+
+def get_gain():
+    calibration = int(input('Input the Calibration Resistance (Ohms) : '))
+
+    data = execute_sweep()
+    gain = calc_gain_factor(data, calibration)
+    print('Gain Factors Calculated')
+
+    return gain
+
+# calculates the adjusted impedance values using the gain factor
+def calc_impedance(data, gain):
+    imp = []
+    
+    for ind, d in enumerate(data):
+        mag = math.sqrt((d[1] ** 2) + (d[2] ** 2))
+        i = 1 / (gain[ind][1] * mag)
+        p = math.atan(d[2] / d[1])
+        imp.append((d[0], i, p))
+
+    return imp
+
+# returns a list of tuples with gain factors for each frequency given a calibration resistance
+def calc_gain_factor(data, calibration):
+    gain = []
+    for d in data:
+        mag = math.sqrt((d[1] ** 2) + (d[2] ** 2))
+        g = (1 / calibration) / mag
+        gain.append((data[0], g))
+
+    return gain
+
+# returns a list of tuples with each element a data point in the sweep
 def execute_sweep():
     # open usb connection and check if success
     ser = open_usb()
@@ -13,31 +66,32 @@ def execute_sweep():
 
     # should read 3 back
     buff = ser.read(1)
-    if (int.from_bytes(buff, "little") == 3):
-        print("Sweep Started")
-    else:
+    if (int.from_bytes(buff, "little") != 3):
+        print("Sweep Start Failed")
         return
 
     freq = [0] # stores the frequency data
     imp = [0, 0] # stores the impedance data 0:real 1:imaginary
+    data = [] # list to store the data
 
     # get data from the sweep, if the current frequency is 3, then the sweep is done
-    while (freq != 3):
+    while (True):
         # read a data point from the sensor
         buff = ser.read(8)
         
         # if the frequency of the data point is 0 (which is not possible on the AD5933) then the sweep is done
-        freq = int.from_bytes(buff[:4], "little", signed=False)
+        freq = int.from_bytes(buff[0:4], "little", signed=False)
         if (freq == 0):
             break
 
         # get real and imaginary data and convert it
-        imp[0] = int.from_bytes(buff[4:6], "little", signed=True)
-        imp[1] = int.from_bytes(imp[6:], "little", signed=True)
+        imp[0] = int.from_bytes(buff[4:6], "big", signed=True)
+        imp[1] = int.from_bytes(buff[6:8], "big", signed=True)
 
-        print(f'Frequency: {freq} Real: {imp[0]} Imaginary: {imp[1]}')
+        # each element of data is a tuple with the freq, real, and imaginary
+        data.append((freq, imp[0], imp[1]))
 
-    print("Sweep Complete")
+    return data
 
 # sends the current sweep over usb
 def send_sweep(sweep):
@@ -87,9 +141,10 @@ def send_sweep(sweep):
     ser.write(buff)
 
     # expect a 2 in return
-    buff = ser.read(2)
-    if (buff.decode('ascii') == 'cs'):
-       buff = struct.pack('8I 8I 2I 2I 1I 1I 1I 8I 1I',
+    buff = ser.read(1)
+    if (int.from_bytes(buff, "little") == 2):
+        print('Sending Sweep')
+        buff = struct.pack('I I H H B B B B',
                sweep.get('start'),
                sweep.get('delta'),
                sweep.get('steps'),
@@ -97,19 +152,15 @@ def send_sweep(sweep):
                converted[0],
                converted[1],
                converted[2],
-               sweep.get('clockFrequency'),
                converted[3])
 
-       # write the data
-       ser.write(buff)
+        print(buff)
 
-       # expect a 'c' back
-       buff = ser.read(1)
-       if (buff.decode('ascii') == 'c'):
-           print('Sweep set successfully')
-           return
-
-    print('Sweep send failed')
+        # write the data
+        num = ser.write(buff)
+        print(num)
+    else:
+        print('Sweep send failed')
 
 # opens a usb connection on COM5
 def open_usb():
@@ -263,4 +314,6 @@ def print_commands():
              e - edit the current sweep
              c - check if device is connected
              s - send the sweep to the sensor
-             x - execute the sweep on the sensor (must send the sweep with "s" first)''')
+             g - calculate multi-point gain factor
+             x - execute the sweep on the sensor (must send the sweep with "s" first)
+             o - output the impedance data to csv''')

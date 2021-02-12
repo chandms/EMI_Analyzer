@@ -16,7 +16,11 @@ sweep = {
         }
 
 # create DataFrame to store the data (blank at start)
-df = pd.DataFrame([0])
+df = pd.DataFrame()
+
+# variables to store program state
+gotGain = False
+gotData = False
 
 # let the user know that h can be used to get command
 print('This is the default sweep:')
@@ -40,8 +44,23 @@ while(1):
         af.print_sweep(sweep)
     elif (cmd == 's'):
         af.send_sweep(sweep)
+    elif (cmd == 'g'):
+        gain = af.get_gain()
+        gotGain = True
     elif (cmd == 'x'):
-        af.execute_sweep()
+        if gotGain:
+            data = af.get_impedance(gain)
+            df = af.create_dataframe(data)
+            gotData = True
+            print(df)
+            print('Sweep Complete')
+        else:
+            print('Calculate Gain Factor First!')
+    elif (cmd == 'o'):
+        if gotData:
+            af.output_csv(df)
+        else:
+            print('Execute a Sweep First!')
     else:
         print('Input a valid command!')
     print('')

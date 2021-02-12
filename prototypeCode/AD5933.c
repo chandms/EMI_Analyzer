@@ -80,11 +80,12 @@ bool AD5933_Sweep(Sweep * sweep)
     buff[3] = sel[3];
 
     // cut up the real and imaginary impedances
-    sel = (uint8_t*) sweep->currentData;
-    buff[4] = sel[0];
-    buff[5] = sel[1];
-    buff[6] = sel[2];
-    buff[7] = sel[3];
+    // sel = (uint8_t*) &sweep->currentData[0];
+    buff[4] = sweep->currentData[0]; //sel[0];
+    buff[5] = sweep->currentData[1]; //sel[1];
+    // sel = (uint8_t*) &sweep->currentData[1];
+    buff[6] = sweep->currentData[2]; //sel[2];
+    buff[7] = sweep->currentData[3]; //sel[3];
 		
     // send all the data over usb
 		app_usbd_cdc_acm_write(&m_app_cdc_acm, buff, 8);
@@ -330,19 +331,25 @@ bool AD5933_ReadTemp(int * temp)
 // Return value:
 //  false if I2C error
 //  true if no error
-bool AD5933_ReadData(uint16_t * data)
+bool AD5933_ReadData(uint8_t * data)
 {
   // create a buffer to store the read data
-  uint8_t buff[4];
+  // uint8_t buff[4];
+  // uint8_t * buff = (uint8_t*) data;
 
   // read the data from the data register
-  if (!AD5933_ReadBytes(buff, 4, IMPEDANCE_REG)) return false;
+  if (!AD5933_ReadBytes(data, 2, REAL_REG)) return false;
+	if (!AD5933_ReadBytes(&data[2], 2, IMAG_REG)) return false;
 
   // data is stored in 16 bit two's complement
   // this will be taken into account when it is processed by the python script later
 	// so just put them into 16 bit
+  // uint8_t * sel = (uint8_t*) &data[0];
+
+  /*
 	data[0] = (buff[0] << 8) | buff[1];
 	data[1] = (buff[2] << 8) | buff[3];
+  */
 
   // success
   return true;
