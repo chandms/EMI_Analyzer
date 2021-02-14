@@ -84,8 +84,6 @@ void twi_init (void);
 void usbd_user_ev_handler(app_usbd_event_type_t event);
 void init_usb(void);
 
-bool recieveSweep(Sweep * sweep);
-
 // get the TWI instance
 const nrf_drv_twi_t m_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
 
@@ -165,15 +163,6 @@ int main(void)
           app_usbd_cdc_acm_write(&m_app_cdc_acm, m_tx_buffer, 1);
         }
         // 2: Recieve a set of sweep parameters
-        if (m_rx_buffer[0] == 2)
-        {
-          // send back 2
-          m_tx_buffer[0] = 2;
-          app_usbd_cdc_acm_write(&m_app_cdc_acm, m_tx_buffer, 1);
-
-          // recieve a sweep
-          recieveSweep(sweep);
-        }
 
         // 3: Execute Sweep, send back 3 then start a sweep
         if (m_rx_buffer[0] == 3)
@@ -201,16 +190,6 @@ int main(void)
     /* Sleep CPU only if there was no interrupt since last loop processing */
     __WFE();
   }
-}
-
-// recieves usb data for a sweep parameter over usb
-bool recieveSweep(Sweep * sweep)
-{
-  uint8_t params[16];
-
-  app_usbd_cdc_acm_read(&m_app_cdc_acm, params, 16);
-
-  return true;
 }
 
 // USB event handler

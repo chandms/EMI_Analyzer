@@ -4,8 +4,9 @@ This repository contains the project files for the EMI Analyzer developed for Pu
 
 ## nRF52 Code
 
-The code located in the prototypeCode folder is for the nRF52840 Dev Board. The NRF SDK and Keil are required to compile and load this code to the dev board. Once you have the SDK, you can replace the main and config file of an example and copy the two AD5933 files to the same directory as the main file.
+The code located in the prototypeCode folder is for the nRF52840 Dev Board. The NRF SDK and Keil are required to compile and load this code to the dev board. Replace the Keil project files and SDK config file of an example project located in the peripherals examples in the SDK. Then copy the main.c and AD5933.c/.h files where main.c is located in that example.
 
-## ESP32 Code
+## Python Script
 
-This is the old code for the first prototype design that was put aside for the newer NRF prototype. I still have the code here for reference, but will probably remove it at some point.
+There is a Python script located in the testProgram folder that can control and get impedance data from the AD5933 connected to the NRF52 dev board. Run the script from the command prompt. You can install the necessary libraries with pip. Currently, the send sweep command does not work and a sweep must be preloaded onto the dev board.
+
