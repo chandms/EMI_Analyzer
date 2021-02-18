@@ -30,6 +30,16 @@ def get_gain():
 
     return gain
 
+# calculates the phase in degrees given real and imaginary impedance
+def calc_phase(real, imag):
+    p = math.degrees(math.atan(imag / real))
+    if (real < 0):
+        p = p + 180
+    else:
+        if (imag < 0):
+            p = p + 360
+    return p
+
 # calculates the adjusted impedance values using the gain factor
 def calc_impedance(data, gain):
     imp = []
@@ -37,19 +47,20 @@ def calc_impedance(data, gain):
     for ind, d in enumerate(data):
         mag = math.sqrt((d[1] ** 2) + (d[2] ** 2))
         i = 1 / (gain[ind][1] * mag)
-        p = math.atan(d[2] / d[1])
+        p = calc_phase(d[1], d[2])
+        p = p - gain[ind][2]
         imp.append((d[0], i, p))
 
     return imp
 
-# returns a list of tuples with gain factors for each frequency given a calibration resistance
+# returns a list of tuples with gain factor and system phase for each frequency given a calibration resistance
 def calc_gain_factor(data, calibration):
     gain = []
     for d in data:
         mag = math.sqrt((d[1] ** 2) + (d[2] ** 2))
         g = (1 / calibration) / mag
-        gain.append((data[0], g))
-
+        ps = calc_phase(d[1], d[2])
+        gain.append((d[0], g, ps))
     return gain
 
 # returns a list of tuples with each element a data point in the sweep
@@ -87,6 +98,8 @@ def execute_sweep():
         # get real and imaginary data and convert it
         imp[0] = int.from_bytes(buff[4:6], "big", signed=True)
         imp[1] = int.from_bytes(buff[6:8], "big", signed=True)
+
+        data.append((freq, imp[0], imp[1]))
 
     return data
 
@@ -166,7 +179,7 @@ def open_usb():
 
     # try to connect to port COM5
     try:
-        ser.port = 'COM5'
+        ser.port = 'COM7'
         ser.timout = 10
         ser.write_timeout = 10
         ser.open()
@@ -187,7 +200,7 @@ def check_usb():
 
     # try to connect to port COM5
     try:
-        ser.port = 'COM5'
+        ser.port = 'COM7'
         ser.timout = 10
         ser.write_timout = 10
         ser.open()

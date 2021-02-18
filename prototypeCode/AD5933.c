@@ -56,6 +56,9 @@ bool AD5933_Sweep(Sweep * sweep)
   // start getting the data from the sweep
   bool i2c_stats = true; // track twi success
   uint8_t AD5933_status; // stores the AD5933 status
+	
+	// check AD5933 status before sweep
+	i2c_stats = AD5933_ReadStatus(&AD5933_status);
 
   // read impedance data until sweep is complete or twi fail
   while (((AD5933_status & STATUS_DONE) != STATUS_DONE) && i2c_stats)

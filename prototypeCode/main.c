@@ -128,7 +128,7 @@ int main(void)
   // set the default sweep parameters
   sweep->start = 1000;
   sweep->delta = 100;
-  sweep->steps = 490;
+  sweep->steps = 5;
   sweep->cycles = 15;
   sweep->cyclesMultiplier = NO_MULT;
   sweep->range = RANGE1;
