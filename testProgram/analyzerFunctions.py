@@ -4,6 +4,36 @@ import numpy as np
 import pandas as pd
 import struct
 
+# sweeps multiple times to output an average of all values
+def sweep_ave(gain, num_ave):
+    for i in range(0, num_ave):
+        # get the data
+        data = get_impedance(gain)
+        
+        # if first sweep, create dataFrame
+        if (i == 0):
+            df = create_dataframe(data)
+        # if not, take the average of the two dataframes
+        else:
+            df = ave_dataframes(df, create_dataframe(data))
+
+    return df
+
+# averages the numbers in 2 dataFrames
+def ave_dataframes(df1, df2):
+    return df1.combine(df2, ave_series)
+
+# averages the numbers in 2 series
+def ave_series(s1, s2):
+    return s1.combine(s2, ave_num)
+
+# averages 2 numbers
+def ave_num(n1, n2):
+    return (n1 + n2) / 2
+
+def set_ave():
+    return int(input(f"Number of Sweeps to Average: "))
+
 def output_csv(df):
     name = input('File Name: ')
 
@@ -21,11 +51,25 @@ def get_impedance(gain):
 
     return imp
 
-def get_gain():
-    calibration = int(input('Input the Calibration Resistance (Ohms) : '))
+def ave_gain(g1, g2):
+    gains = []
+    for i in range(0, len(g1)):
+        gs = (g1[i][1] + g2[i][1]) / 2
+        gp = (g1[i][2] + g2[i][2]) / 2
+        gains.append((g1[i][0], gs, gp))
 
-    data = execute_sweep()
-    gain = calc_gain_factor(data, calibration)
+    return gains
+
+def get_gain(num_ave):
+    calibration = int(input('Input the Calibration Resistance (Ohms) : '))
+    
+    for i in range(0, num_ave):
+        data = execute_sweep()
+        if (i == 0):
+            gain = calc_gain_factor(data, calibration)
+        else:
+            gain = ave_gain(gain, calc_gain_factor(data, calibration))
+
     print('Gain Factors Calculated')
 
     return gain
@@ -324,6 +368,7 @@ def print_commands():
              e - edit the current sweep
              c - check if device is connected
              s - send the sweep to the sensor
+             a - set the number of sweeps to average
              g - calculate multi-point gain factor
              x - execute the sweep on the sensor (must send the sweep with "s" first)
              o - output the impedance data to csv''')

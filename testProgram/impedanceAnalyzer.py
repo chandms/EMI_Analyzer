@@ -22,6 +22,9 @@ df = pd.DataFrame()
 gotGain = False
 gotData = False
 
+# the number of sweeps to average when calculating gain/impedance
+num_ave = 1
+
 # let the user know that h can be used to get command
 print('This is the default sweep:')
 af.print_sweep(sweep)
@@ -44,13 +47,14 @@ while(1):
         af.print_sweep(sweep)
     elif (cmd == 's'):
         af.send_sweep(sweep)
+    elif (cmd == 'a'):
+        num_ave = af.set_ave()
     elif (cmd == 'g'):
-        gain = af.get_gain()
+        gain = af.get_gain(num_ave)
         gotGain = True
     elif (cmd == 'x'):
         if gotGain:
-            data = af.get_impedance(gain)
-            df = af.create_dataframe(data)
+            df = af.sweep_ave(gain, num_ave)
             gotData = True
             print(df)
             print('Sweep Complete')
