@@ -27,30 +27,39 @@
 #include "nrf_delay.h"
 #include "boards.h"
 #include "app_util_platform.h"
-#include "app_error.h"
 #include "nrf_drv_twi.h"
 
+#include "fds.h"
+
 // logging includes
+#ifdef DEBUG_LOG
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
+#endif
 
-// AD5933 include
+// my modules include
 #include "AD5933.h"
+#include "flashManager.h"
 
-// Needed to get the instance ID
-#define TWI_INSTANCE_ID     0
+// --- User Defines ---
 
-// LED for USB status
-#define LED_USB_RESUME      (BSP_BOARD_LED_0)
+bool recieveSweep(Sweep * sweep);
+void set_default(Sweep * sweep);
+
+// --- USB Defines ---
+
+void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_acm_user_event_t event);
+void usbd_user_ev_handler(app_usbd_event_type_t event);
+void init_usb(void);
 
 // if power detection is enabled
 #ifndef USBD_POWER_DETECTION
 #define USBD_POWER_DETECTION true
 #endif
 
-// USB defines
-void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst, app_usbd_cdc_acm_user_event_t event);
+// LED for USB status
+#define LED_USB_RESUME      (BSP_BOARD_LED_0)
 
 #define CDC_ACM_COMM_INTERFACE  0
 #define CDC_ACM_COMM_EPIN       NRF_DRV_USBD_EPIN2
@@ -78,11 +87,15 @@ uint8_t m_tx_buffer[NRF_DRV_USBD_EPSIZE];
 volatile bool rx_ready = false;
 volatile bool tx_ready = false;
 
+// --- TWI Defines ---
+
+// Needed to get the instance ID
+#define TWI_INSTANCE_ID     0
+
 // function declarations
 void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context);
 void twi_init (void);
-void usbd_user_ev_handler(app_usbd_event_type_t event);
-void init_usb(void);
+
 
 // get the TWI instance
 const nrf_drv_twi_t m_twi = NRF_DRV_TWI_INSTANCE(TWI_INSTANCE_ID);
@@ -93,18 +106,13 @@ volatile bool m_xfer_done = false;
 // Indicates TWI error
 volatile bool twi_error = false;
 
-/**
- * @brief Function for application main entry.
- */
+// Main function
 int main(void)
 {
   bool i2c_stats;						// stores if i2c success
   uint8_t AD5933_status;		// to store the status
-  ret_code_t ret;						// stores the usb status
-
-  // create new sweep
-  Sweep * sweep = malloc(sizeof(Sweep));
-
+  ret_code_t ret;						// NRF status
+	
   // init LEDS
   bsp_board_init(BSP_INIT_LEDS);
 
@@ -123,18 +131,19 @@ int main(void)
   init_usb();
 
   // reset the AD5933
-  i2c_stats = AD5933_SetControl(NO_OPERATION, RANGE1, GAIN1, INTERN_CLOCK, 1);
+  // i2c_stats = AD5933_SetControl(NO_OPERATION, RANGE1, GAIN1, INTERN_CLOCK, 1);
+	
+	// init flashManager
+	flashManager_init();
+	
+	// create a new sweep
+	Sweep sweep = {0};
 
-  // set the default sweep parameters
-  sweep->start = 1000;
-  sweep->delta = 100;
-  sweep->steps = 490;
-  sweep->cycles = 15;
-  sweep->cyclesMultiplier = NO_MULT;
-  sweep->range = RANGE1;
-  sweep->clockSource = INTERN_CLOCK;
-  sweep->clockFrequency = CLK_FREQ;
-  sweep->gain = GAIN1;
+  // set the sweep to default parameters
+  set_default(&sweep);
+	
+	// variable to store the number of saved sweeps
+	uint32_t numSweeps = 0;
 
 #ifdef DEBUG_LOG
   if (i2c_stats) {NRF_LOG_INFO("AD5933 Connected");}
@@ -142,7 +151,11 @@ int main(void)
   NRF_LOG_FLUSH();
 #endif
 
-  // Read the temp from the AD5933
+	// allocate memory for sweep data
+	uint32_t freq[3] = {1000, 1100, 1200};
+	uint16_t real[3] = {254, 696, 330};
+	uint16_t imag[3] = {3408, 24, 1015};
+
   while (true)
   {
     // wait for USB to be ready
@@ -153,32 +166,35 @@ int main(void)
     {
       do
       {
-        // the first byte is the command
+        // using usb for testing
 
-        // 1: Check Connection, send back 1
-        if (m_rx_buffer[0] == 1)
+        // starting with '1' on the keyboard is equal to 49
+        if (m_rx_buffer[0] == 49)
         {
-          // send back 1
-          m_tx_buffer[0] = 1;
-          app_usbd_cdc_acm_write(&m_app_cdc_acm, m_tx_buffer, 1);
+          flashManager_checkConfig(&numSweeps, &sweep);
         }
-        // 2: Recieve a set of sweep parameters
-
-        // 3: Execute Sweep, send back 3 then start a sweep
-        if (m_rx_buffer[0] == 3)
+        if (m_rx_buffer[0] == 50)
         {
-          // send back 3
-          m_tx_buffer[0] = 3;
-          app_usbd_cdc_acm_write(&m_app_cdc_acm, m_tx_buffer, 1);
-
-          // start a sweep
-          AD5933_Sweep(sweep);
-
-          // send a data point with empty values
-          // this will signify the python script to stop reading serial data
-          uint8_t buff[8] = {0};
-          app_usbd_cdc_acm_write(&m_app_cdc_acm, buff, 8);
+          if (flashManager_saveSweep(freq, real, imag, &sweep.metadata, numSweeps + 1))
+					{
+						numSweeps += 1;
+						flashManager_updateNumSweeps(&numSweeps);
+					}
         }
+        if (m_rx_buffer[0] == 51)
+        {
+          if (flashManager_getSweep(freq, real, imag, &sweep.metadata, numSweeps))
+					{
+						NRF_LOG_INFO("Sweep %d found, freq[2] = %d", numSweeps, freq[2]);
+						NRF_LOG_FLUSH();
+					}
+        }
+				if (m_rx_buffer[0] == 52)
+				{
+					freq[2] += 100;
+					NRF_LOG_INFO("Freq[2]: %d", freq[2]);
+					NRF_LOG_FLUSH();
+				}
 
         ret = app_usbd_cdc_acm_read(&m_app_cdc_acm, m_rx_buffer, 1);
       } while(ret == NRF_SUCCESS);
@@ -187,10 +203,41 @@ int main(void)
       rx_ready = false;
     }
 
-    /* Sleep CPU only if there was no interrupt since last loop processing */
+    // Sleep CPU only if there was no interrupt since last loop processing
     __WFE();
   }
 }
+
+// recieves usb data for a sweep parameter over usb
+bool recieveSweep(Sweep * sweep)
+{
+  uint8_t params[16];
+
+  app_usbd_cdc_acm_read(&m_app_cdc_acm, params, 16);
+
+  return true;
+}
+
+void set_default(Sweep * sweep)
+{
+  // set the default sweep parameters
+  sweep->start 							= 1000;
+  sweep->delta 							= 100;
+  sweep->steps 							= 0;
+  sweep->cycles 						= 15;
+  sweep->cyclesMultiplier 	= NO_MULT;
+  sweep->range 							= RANGE1;
+  sweep->clockSource 				= INTERN_CLOCK;
+  sweep->clockFrequency 		= CLK_FREQ;
+  sweep->gain 							= GAIN1;
+	sweep->metadata.numPoints = sweep->steps + 1;
+	sweep->metadata.temp			= 100;
+	sweep->metadata.time			= 30;
+
+  return;
+}
+
+// --- USB Functions ---
 
 // USB event handler
 void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
@@ -222,7 +269,7 @@ void cdc_acm_user_ev_handler(app_usbd_class_inst_t const * p_inst,
   }
 }
 
-// USB user event handler
+// USB driver event handler
 void usbd_user_ev_handler(app_usbd_event_type_t event)
 {
   switch (event)
@@ -256,6 +303,7 @@ void usbd_user_ev_handler(app_usbd_event_type_t event)
   }
 }
 
+// USB initialization
 void init_usb(void)
 {
   ret_code_t ret;
@@ -300,9 +348,9 @@ void init_usb(void)
   }
 }
 
-/**
- * @brief TWI events handler.
- */
+// --- TWI Functions ---
+
+// TWI events handler.
 void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
 {
   switch (p_event -> type)
@@ -358,9 +406,8 @@ void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
   }
 }
 
-/**
- * @brief TWI (I2C) initialization.
- */
+
+// TWI (I2C) initialization.
 void twi_init (void)
 {
   ret_code_t err_code;

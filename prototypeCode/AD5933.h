@@ -107,6 +107,14 @@ extern volatile bool m_xfer_done;
 extern volatile bool twi_error;
 extern const app_usbd_cdc_acm_t m_app_cdc_acm;
 
+// struct to hold sweep metadata
+typedef struct sweepData
+{
+	uint32_t time;
+	uint16_t temp;
+	uint32_t numPoints;
+} MetaData;
+
 // struct to hold sweep parameters
 typedef struct sweepParams
 {
@@ -125,10 +133,13 @@ typedef struct sweepParams
   uint16_t currentStep;      // the current step the sweep is on
   uint32_t currentFrequency; // the current frequency of the sweep
   uint8_t currentData[4];   // the real and imaginary impedance values of the last point of the sweep
+	
+	// sweep metaData
+	MetaData metadata;
 } Sweep;
 
 // AD5933 user control functions
-bool AD5933_Sweep(Sweep * sweep);
+bool AD5933_Sweep(Sweep * sweep, uint32_t * freq, uint16_t * real, uint16_t * imag);
 
 // AD5933 control helper functions
 bool AD5933_SetStart(uint32_t start, uint32_t clkFreq);

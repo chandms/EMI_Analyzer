@@ -721,6 +721,16 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>Flash_Manager</GroupName>
+          <Files>
+            <File>
+              <FileName>flashManager.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\flashManager.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>::CMSIS</GroupName>
         </Group>
         <Group>

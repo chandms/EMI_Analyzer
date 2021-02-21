@@ -9,13 +9,16 @@
 
 #include "AD5933.h"
 
-// sweeps given sweep parameters, outputs the data over USB
+// sweeps given sweep parameters and saves sweep data to arrays from the input arguments
 // Arguments: 
 //	* sweep: pointer to the sweep struct
+//	* freq:  pointer to the arrary to store frequency data
+//	* real:  pointer to the array to store real impedance
+//	* imag:  pointer to the array to store imaginary impedance
 // Return value:
 //  false if error with starting sweep
 //  true  if sweep started successfully
-bool AD5933_Sweep(Sweep * sweep)
+bool AD5933_Sweep(Sweep * sweep, uint32_t * freq, uint16_t * real, uint16_t * imag)
 {
   // set the range, gain, clock source, and reset the AD5933
   // Although reseting the AD5933 puts it in standby mode (according to the datasheet), 
@@ -57,6 +60,9 @@ bool AD5933_Sweep(Sweep * sweep)
   bool i2c_stats = true; // track twi success
   uint8_t AD5933_status; // stores the AD5933 status
 
+  // read the AD5933 status
+  i2c_stats = AD5933_ReadStatus(&AD5933_status);
+
   // read impedance data until sweep is complete or twi fail
   while (((AD5933_status & STATUS_DONE) != STATUS_DONE) && i2c_stats)
   {
@@ -68,7 +74,13 @@ bool AD5933_Sweep(Sweep * sweep)
 
     // read the impedance data
     i2c_stats = AD5933_ReadData(sweep->currentData);
-
+		
+		// put the data into the given arrays
+		freq[sweep->currentStep] = sweep->currentFrequency;
+		real[sweep->currentStep] = sweep->currentData[0];
+		imag[sweep->currentStep] = sweep->currentData[1];
+		
+		/* SAVE FOR WHEN I WANT TO SEND THE DATA VIA USB
     // send the data over USB in this order: frequency, real, imaginary
     uint8_t buff[8];
 
@@ -87,6 +99,7 @@ bool AD5933_Sweep(Sweep * sweep)
 
     // send all the data over usb
     app_usbd_cdc_acm_write(&m_app_cdc_acm, buff, 8);
+		*/
 
     // increment the sweep
     i2c_stats = AD5933_SetControl(INCREMENT_FREQ, sweep->range, sweep->gain, sweep->clockSource, 0);
