@@ -32,6 +32,8 @@
 #define SWEEP_REAL				0x0002
 #define SWEEP_IMAG				0x0003
 #define SWEEP_METADATA		0x0004
+#define MAX_FREQ_SIZE     2048
+#define MAX_IMP_SIZE      1024
 
 // User Functions
 bool flashManager_init(void);

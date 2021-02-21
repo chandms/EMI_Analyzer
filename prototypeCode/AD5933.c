@@ -83,27 +83,6 @@ bool AD5933_Sweep(Sweep * sweep, uint32_t * freq, uint16_t * real, uint16_t * im
 		freq[sweep->currentStep] = sweep->currentFrequency;
 		real[sweep->currentStep] = sweep->currentData[0];
 		imag[sweep->currentStep] = sweep->currentData[1];
-		
-		/* SAVE FOR WHEN I WANT TO SEND THE DATA VIA USB
-    // send the data over USB in this order: frequency, real, imaginary
-    uint8_t buff[8];
-
-    // cut up currentFrequency into bytes
-    uint8_t * sel = (uint8_t*) &sweep->currentFrequency;
-    buff[0] = sel[0];
-    buff[1] = sel[1];
-    buff[2] = sel[2];
-    buff[3] = sel[3];
-
-    // copy the real and imaginary impedance values
-    buff[4] = sweep->currentData[0];
-    buff[5] = sweep->currentData[1];
-    buff[6] = sweep->currentData[2];
-    buff[7] = sweep->currentData[3];
-
-    // send all the data over usb
-    app_usbd_cdc_acm_write(&m_app_cdc_acm, buff, 8);
-		*/
 
     // increment the sweep
     i2c_stats = AD5933_SetControl(INCREMENT_FREQ, sweep->range, sweep->gain, sweep->clockSource, 0);

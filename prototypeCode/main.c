@@ -48,6 +48,7 @@
 
 bool recieveSweep(Sweep * sweep);
 void set_default(Sweep * sweep);
+bool sendSweep(uint32_t sweepNum);
 
 // --- USB Defines ---
 
@@ -149,6 +150,9 @@ int main(void)
 	
 	// variable to store the number of saved sweeps
 	uint32_t numSweeps = 0;
+	
+	// load the config files from flash
+	flashManager_checkConfig(&numSweeps, &sweep);
 
 #ifdef DEBUG_LOG
   if (i2c_stats) {NRF_LOG_INFO("AD5933 Connected");}
@@ -217,15 +221,22 @@ int main(void)
 					nrf_free(real);
 					nrf_free(imag);
         }
-				if (m_rx_buffer[0] == 52)
+				if (m_rx_buffer[0] == 3)
 				{
-					if (numSweeps > 0 && flashManager_deleteSweep(numSweeps))
+					// send back 3
+					uint8_t buff[1] = {3};
+					app_usbd_cdc_acm_write(&m_app_cdc_acm, buff, 1);
+					
+					// send the most recent sweep
+					if (sendSweep(numSweeps))
 					{
-						numSweeps -= 1;
-						flashManager_updateNumSweeps(&numSweeps);
-						NRF_LOG_INFO("Deleted sweep, current saved sweeps: %d", numSweeps);
-						NRF_LOG_FLUSH();
+						NRF_LOG_INFO("Sweep send success");
 					}
+					else
+					{
+						NRF_LOG_INFO("Sweep send fail");
+					}
+					NRF_LOG_FLUSH();
 				}
 
         ret = app_usbd_cdc_acm_read(&m_app_cdc_acm, m_rx_buffer, 1);
@@ -238,6 +249,59 @@ int main(void)
     // Sleep CPU only if there was no interrupt since last loop processing
     __WFE();
   }
+}
+
+bool sendSweep(uint32_t sweepNum)
+{
+	// allocate memory for sweeps
+	uint32_t * freq = nrf_malloc(MAX_FREQ_SIZE);
+	uint16_t * real = nrf_malloc(MAX_IMP_SIZE);
+	uint16_t * imag = nrf_malloc(MAX_IMP_SIZE);
+	
+	MetaData metadata;		 // create a metadata to store current sweep data
+	uint8_t buff[8];		  // buffer to store data points
+	uint8_t * sel;			 //	pointer to select each byte in data
+	bool ret = false;		// saves if get sweep fails
+	
+	// get sweep and send it over USB
+	if(flashManager_getSweep(freq, real, imag, &metadata, sweepNum))
+	{
+		// loop through each point in the sweep and send it over usb
+		for (int i = 0; i < metadata.numPoints; i++)
+		{
+			// cut up currentFrequency into bytes
+			sel = (uint8_t *) &freq[i];
+			buff[0] = sel[0];
+			buff[1] = sel[1];
+			buff[2] = sel[2];
+			buff[3] = sel[3];
+
+			// copy the real and imaginary impedance values
+			sel = (uint8_t *) &real[i];
+			buff[4] = sel[0];
+			buff[5] = sel[1];
+			
+			sel = (uint8_t *) &imag[i];
+			buff[6] = sel[0];
+			buff[7] = sel[1];
+
+			// send all the data over usb
+			app_usbd_cdc_acm_write(&m_app_cdc_acm, buff, 8);
+		}
+		ret = true;
+	}
+	
+	// send a blank sweep to indicate sweep done
+	uint8_t blank[8] = {0};
+	app_usbd_cdc_acm_write(&m_app_cdc_acm, blank, 8);
+	
+	// free the memory
+	nrf_free(freq);
+	nrf_free(real);
+	nrf_free(imag);
+	
+	// return if the sweep send successs
+	return ret;
 }
 
 // recieves usb data for a sweep parameter over usb
@@ -255,7 +319,7 @@ void set_default(Sweep * sweep)
   // set the default sweep parameters
   sweep->start 							= 1000;
   sweep->delta 							= 100;
-  sweep->steps 							= 5;
+  sweep->steps 							= 490;
   sweep->cycles 						= 15;
   sweep->cyclesMultiplier 	= NO_MULT;
   sweep->range 							= RANGE1;

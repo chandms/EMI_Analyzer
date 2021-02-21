@@ -22,22 +22,10 @@ static char const * fds_evt_str[] =
   "FDS_EVT_GC",
 };
 
-/* Keep track of the progress of a delete_all operation. */
-static struct
-{
-  bool delete_next;   //!< Delete next record.
-  bool pending;       //!< Waiting for an fds FDS_EVT_DEL_RECORD event, to delete the next record.
-} m_delete_all;
-
 // Flag to check fds initialization.
 static bool volatile m_fds_initialized;
 
-/*
-// fds pointers to store the currently open file information
-static fds_flash_record_t  flash_record;
-static fds_record_desc_t   record_desc;
-static fds_find_token_t    ftok;
-*/
+// --- User Functions ---
 
 // Deletes a sweep from flash
 // Arguments: 
@@ -586,7 +574,6 @@ static void fds_evt_handler(fds_evt_t const * p_evt)
           NRF_LOG_INFO("Record key:\t0x%04x", p_evt->del.record_key);
 #endif
         }
-        m_delete_all.pending = false;
       } break;
 
     default:
