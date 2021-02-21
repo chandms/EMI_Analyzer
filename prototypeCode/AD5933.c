@@ -9,6 +9,10 @@
 
 #include "AD5933.h"
 
+#ifndef DEBUG_TWI
+#undef DEBUG_LOG
+#endif
+
 // sweeps given sweep parameters and saves sweep data to arrays from the input arguments
 // Arguments: 
 //	* sweep: pointer to the sweep struct

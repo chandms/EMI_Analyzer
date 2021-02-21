@@ -29,6 +29,8 @@
 #include "app_util_platform.h"
 #include "nrf_drv_twi.h"
 
+#include "mem_manager.h"
+
 #include "fds.h"
 
 // logging includes
@@ -129,12 +131,15 @@ int main(void)
 
   // init USB
   init_usb();
-
-  // reset the AD5933
-  // i2c_stats = AD5933_SetControl(NO_OPERATION, RANGE1, GAIN1, INTERN_CLOCK, 1);
 	
 	// init flashManager
 	flashManager_init();
+	
+	// init memory manager
+	nrf_mem_init();
+
+  // reset the AD5933
+  i2c_stats = AD5933_SetControl(NO_OPERATION, RANGE1, GAIN1, INTERN_CLOCK, 1);
 	
 	// create a new sweep
 	Sweep sweep = {0};
@@ -151,11 +156,11 @@ int main(void)
   NRF_LOG_FLUSH();
 #endif
 
-	// allocate memory for sweep data
-	uint32_t freq[3] = {1000, 1100, 1200};
-	uint16_t real[3] = {254, 696, 330};
-	uint16_t imag[3] = {3408, 24, 1015};
-
+	// pointers to store sweep data
+	uint32_t * freq;
+	uint16_t * real;
+	uint16_t * imag;
+	
   while (true)
   {
     // wait for USB to be ready
@@ -175,25 +180,52 @@ int main(void)
         }
         if (m_rx_buffer[0] == 50)
         {
-          if (flashManager_saveSweep(freq, real, imag, &sweep.metadata, numSweeps + 1))
+					// allocate memory for sweep data
+					freq = nrf_malloc(sizeof(uint32_t) * (sweep.metadata.numPoints));
+					real = nrf_malloc(sizeof(uint16_t) * (sweep.metadata.numPoints));
+					imag = nrf_malloc(sizeof(uint16_t) * (sweep.metadata.numPoints));
+					
+					if (AD5933_Sweep(&sweep, freq, real, imag))
 					{
-						numSweeps += 1;
-						flashManager_updateNumSweeps(&numSweeps);
+						if (flashManager_saveSweep(freq, real, imag, &sweep.metadata, numSweeps + 1))
+						{
+							numSweeps += 1;
+							flashManager_updateNumSweeps(&numSweeps);
+							NRF_LOG_INFO("Sweep %d saved, freq: %d real: %d imag: %d", numSweeps, freq[3], real[3], imag[3]);
+							NRF_LOG_FLUSH();
+						}
 					}
+					// free the memory
+					nrf_free(freq);
+					nrf_free(real);
+					nrf_free(imag);
         }
         if (m_rx_buffer[0] == 51)
         {
+					// allocate memory for sweep data
+					freq = nrf_malloc(sizeof(uint32_t) * (sweep.metadata.numPoints));
+					imag = nrf_malloc(sizeof(uint16_t) * (sweep.metadata.numPoints));
+					real = nrf_malloc(sizeof(uint16_t) * (sweep.metadata.numPoints));
+
           if (flashManager_getSweep(freq, real, imag, &sweep.metadata, numSweeps))
 					{
-						NRF_LOG_INFO("Sweep %d found, freq[2] = %d", numSweeps, freq[2]);
+						NRF_LOG_INFO("Sweep %d found, freq: %d real: %d imag: %d", numSweeps, freq[3], real[3], imag[3]);
 						NRF_LOG_FLUSH();
 					}
+					// free the memory
+					nrf_free(freq);
+					nrf_free(real);
+					nrf_free(imag);
         }
 				if (m_rx_buffer[0] == 52)
 				{
-					freq[2] += 100;
-					NRF_LOG_INFO("Freq[2]: %d", freq[2]);
-					NRF_LOG_FLUSH();
+					if (numSweeps > 0 && flashManager_deleteSweep(numSweeps))
+					{
+						numSweeps -= 1;
+						flashManager_updateNumSweeps(&numSweeps);
+						NRF_LOG_INFO("Deleted sweep, current saved sweeps: %d", numSweeps);
+						NRF_LOG_FLUSH();
+					}
 				}
 
         ret = app_usbd_cdc_acm_read(&m_app_cdc_acm, m_rx_buffer, 1);
@@ -223,7 +255,7 @@ void set_default(Sweep * sweep)
   // set the default sweep parameters
   sweep->start 							= 1000;
   sweep->delta 							= 100;
-  sweep->steps 							= 0;
+  sweep->steps 							= 5;
   sweep->cycles 						= 15;
   sweep->cyclesMultiplier 	= NO_MULT;
   sweep->range 							= RANGE1;
@@ -358,14 +390,14 @@ void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
     case NRF_DRV_TWI_EVT_DONE:
       if (p_event -> xfer_desc.type == NRF_DRV_TWI_XFER_RX)
       {
-#ifdef DEBUG_LOG
+#if defined(DEBUG_LOG) && defined(DEBUG_TWI)
         NRF_LOG_INFO("TWI Read Success");
         NRF_LOG_FLUSH();
 #endif
       }
       else if (p_event -> xfer_desc.type == NRF_DRV_TWI_XFER_TX)
       {
-#ifdef DEBUG_LOG
+#if defined(DEBUG_LOG) && defined(DEBUG_TWI)
         NRF_LOG_INFO("TWI Write Success");
         NRF_LOG_FLUSH();
 #endif

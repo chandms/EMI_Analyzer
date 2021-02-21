@@ -119,13 +119,13 @@ bool flashManager_saveSweep(uint32_t * freq, uint16_t * real, uint16_t * imag, M
   fds_record_desc_t record_desc;
 
   // save frequency data
-  if (!flashManager_createRecord(&record_desc, sweep_num, SWEEP_FREQ, freq, sizeof(freq))) return false;
+  if (!flashManager_createRecord(&record_desc, sweep_num, SWEEP_FREQ, freq, metadata->numPoints * sizeof(uint32_t))) return false;
 	
   // save real data
-  if (!flashManager_createRecord(&record_desc, sweep_num, SWEEP_REAL, real, sizeof(real))) return false;
+  if (!flashManager_createRecord(&record_desc, sweep_num, SWEEP_REAL, real, metadata->numPoints * sizeof(uint16_t))) return false;
 
   // save imaginary data
-  if (!flashManager_createRecord(&record_desc, sweep_num, SWEEP_IMAG, imag, sizeof(imag))) return false;
+  if (!flashManager_createRecord(&record_desc, sweep_num, SWEEP_IMAG, imag, metadata->numPoints * sizeof(uint16_t))) return false;
 
   // save metadata
   if (!flashManager_createRecord(&record_desc, sweep_num, SWEEP_METADATA, metadata, sizeof(MetaData))) return false;
@@ -289,7 +289,7 @@ bool flashManager_init(void)
 static bool flashManager_createRecord(fds_record_desc_t * record_desc, uint32_t file_id, uint32_t record_key, void const * p_data, uint32_t num_bytes)
 {
 #ifdef DEBUG_LOG
-  NRF_LOG_INFO("Writing record %x to file %x", record_key, file_id);
+  NRF_LOG_INFO("Writing %d bytes to record %x in file %x", num_bytes, record_key, file_id);
   NRF_LOG_FLUSH();
 #endif
 
@@ -394,8 +394,20 @@ static bool flashManager_readRecord(fds_record_desc_t * record_desc, void * buff
   // create a new flash_record struct
   fds_flash_record_t flash_record;
 
+  // ret code to store result
+  ret_code_t ret;
+  
   // open the record
-  if (fds_record_open(record_desc, &flash_record) != NRF_SUCCESS) return false;
+  ret = fds_record_open(record_desc, &flash_record);
+  // check if fail
+  if (ret != NRF_SUCCESS) 
+  {
+#ifdef DEBUG_LOG
+    NRF_LOG_INFO("Error opening file: %s", fds_err_str(ret));
+    NRF_LOG_FLUSH();
+#endif
+    return false;
+  }
 
   // copy the data from the record to the buffer
   memcpy(buff, flash_record.p_data, num_bytes);
