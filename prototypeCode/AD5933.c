@@ -9,10 +9,6 @@
 
 #include "AD5933.h"
 
-#ifndef DEBUG_TWI
-#undef DEBUG_LOG
-#endif
-
 // sweeps given sweep parameters and saves sweep data to arrays from the input arguments
 // Arguments: 
 //	* sweep: pointer to the sweep struct
@@ -51,7 +47,7 @@ bool AD5933_Sweep(Sweep * sweep, uint32_t * freq, uint16_t * real, uint16_t * im
   // start the frequency sweep
   if (!AD5933_SetControl(START_SWEEP, sweep->range, sweep->gain, sweep->clockSource, 0)) return false;
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Sweep start success");
   NRF_LOG_FLUSH();
 #endif
@@ -126,7 +122,7 @@ bool AD5933_SetStart(uint32_t start, uint32_t clkFreq)
   buff[1] = (start >> 8) & 0xFF;
   buff[2] = start & 0xFF;
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Sending 0x%x%x%x to register 0x%x", buff[0], buff[1], buff[2], START_FREQ_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -159,7 +155,7 @@ bool AD5933_SetDelta(uint32_t delta, uint32_t clkFreq)
   buff[1] = (delta >> 8) & 0xFF;
   buff[2] = delta & 0xFF;
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Sending 0x%x%x%x to register 0x%x", buff[0], buff[1], buff[2], DELTA_FREQ_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -188,7 +184,7 @@ bool AD5933_SetSteps(uint16_t steps)
   buff[0] = (steps >> 8) & 0x01;
   buff[1] = steps & 0xFF;
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Sending 0x%x%x to register 0x%x", buff[0], buff[1], NUM_STEPS_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -218,7 +214,7 @@ bool AD5933_SetCycles(uint16_t cycles, uint8_t multiplier)
   buff[0] = ((cycles >> 8) & 0x01) | multiplier;
   buff[1] = cycles & 0xFF;
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Sending 0x%x%x to register 0x%x", buff[0], buff[1], NUM_CYCLES_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -249,7 +245,7 @@ bool AD5933_SetControl(uint8_t command, uint8_t range, uint8_t gain, uint8_t clo
   buff[0] = (command << 4) | ((range << 2) | gain);
   buff[1] = (reset << 4) | (clock << 3);
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Sending 0x%x to register 0x%x and 0x%x to register 0x%x", buff[0], CONTROL1_REG, buff[1], CONTROL2_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -274,7 +270,7 @@ bool AD5933_ReadStatus(uint8_t * buff)
   // read the status byte
   status = AD5933_ReadBytes(buff, 1, STATUS_REG);
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Read 0x%x from register 0x%x", buff[0], STATUS_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -297,7 +293,7 @@ bool AD5933_ReadTemp(int * temp)
   // read the temperature register
   AD5933_ReadBytes(buff, 2, TEMP_REG);
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Read 0x%x%x from register 0x%x", buff[0], buff[1], TEMP_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -391,7 +387,7 @@ bool AD5933_SetPointer(uint8_t reg)
   // set data buffer
   uint8_t buff[2] = {SET_POINTER, reg};
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Setting Pointer to %x", reg);
   NRF_LOG_FLUSH();
 #endif
@@ -427,7 +423,7 @@ bool AD5933_Write(uint8_t data, uint8_t reg)
   // set data buffer
   uint8_t buff[2] = {reg, data};
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Writing 0x%x to register 0x%x", data, reg);
   NRF_LOG_FLUSH();
 #endif
@@ -474,7 +470,7 @@ bool AD5933_BlockWrite(uint8_t * buff, uint8_t numbytes)
   data[0] = BLOCK_WRITE;
   data[1] = numbytes;
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Block Writing %d bytes to pointer", numbytes);
   NRF_LOG_FLUSH();
 #endif
@@ -513,7 +509,7 @@ bool AD5933_ReadByte(uint8_t * buff)
   // stores error code
   ret_code_t err_code;
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Reading a byte from pointer");
   NRF_LOG_FLUSH();
 #endif
@@ -550,7 +546,7 @@ bool AD5933_BlockRead(uint8_t * buff, uint8_t numbytes)
   // set data buffer
   uint8_t data[2] = {BLOCK_READ, numbytes};
 
-#ifdef DEBUG_LOG
+#ifdef DEBUG_TWI
   NRF_LOG_INFO("Block reading %d bytes from pointer", numbytes);
   NRF_LOG_FLUSH();
 #endif

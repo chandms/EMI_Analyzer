@@ -24,6 +24,12 @@
 
 #include "AD5933.h"
 
+#ifdef DEBUG_FLASH
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
+#include "nrf_log_default_backends.h"
+#endif
+
 // defines
 #define CONFIG_ID         0x0000
 #define CONFIG_NUM_SWEEPS 0x0001
