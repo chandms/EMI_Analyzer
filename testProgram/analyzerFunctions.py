@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import struct
 
+comPort = 'COM7'
+
 # sweeps multiple times to output an average of all values
 def sweep_ave(gain, num_ave):
     for i in range(0, num_ave):
@@ -107,7 +109,26 @@ def calc_gain_factor(data, calibration):
         gain.append((d[0], g, ps))
     return gain
 
-# returns a list of tuples with each element a data point in the sweep
+def get_num_saved():
+    # open usb connection
+    ser = open_usb()
+    if not ser:
+        return
+    
+    # send the get num saved command
+    buff = bytes([1])
+    ser.write(buff)
+    
+    # should get back the number of sweeps (4 byte int)
+    buff = ser.read(4)
+
+    # convert and print the number of saved sweeps
+    num_saved = int.from_bytes(buff, "little")
+    print(f'Number of saved sweeps in flash: {num_saved}')
+
+    ser.close()
+
+    return
 def execute_sweep():
     # open usb connection and check if success
     ser = open_usb()
@@ -115,6 +136,28 @@ def execute_sweep():
         return
 
     # send the execute sweep command
+    buff = [2]
+    buff = bytes(buff)
+    ser.write(buff)
+
+    # should read 2 back
+    buff = ser.read(1)
+    if (int.from_bytes(buff, "little") != 2):
+        print("Sweep Start Failed")
+        return
+    else:
+        print("Sweep executed and saved")
+        return
+
+
+# returns a list of tuples with each element a data point in the sweep
+def get_sweep():
+    # open usb connection and check if success
+    ser = open_usb()
+    if not (ser):
+        return
+
+    # send the get sweep command
     buff = [3]
     buff = bytes(buff)
     ser.write(buff)
@@ -123,6 +166,7 @@ def execute_sweep():
     buff = ser.read(1)
     if (int.from_bytes(buff, "little") != 3):
         print("Sweep Start Failed")
+        ser.close()
         return
 
     freq = [0] # stores the frequency data
@@ -223,7 +267,7 @@ def open_usb():
 
     # try to connect to port COM5
     try:
-        ser.port = 'COM7'
+        ser.port = comPort
         ser.timout = 10
         ser.write_timeout = 10
         ser.open()
@@ -242,15 +286,15 @@ def check_usb():
     # create a serial connection
     ser = serial.Serial()
 
-    # try to connect to port COM5
+    # try to connect to port comPort
     try:
-        ser.port = 'COM7'
+        ser.port = comPort
         ser.timout = 10
         ser.write_timout = 10
         ser.open()
     except:
         # for some reason I couldn't put the code below here so I just
-        print('')
+        ser.close()
 
     if not (ser.is_open):
         print('COM port not open. Make sure the device is plugged in')
@@ -267,6 +311,8 @@ def check_usb():
             print('Device Connected')
         else:
             print('Device Not Connected')
+
+        ser.close()
 
     return
 

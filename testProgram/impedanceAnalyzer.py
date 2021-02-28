@@ -26,18 +26,22 @@ gotData = False
 num_ave = 1
 
 # let the user know that h can be used to get command
-print('This is the default sweep:')
+print('\nThis is the default sweep:')
 af.print_sweep(sweep)
-print('For a list of commands enter "h"')
+print('\nFor a list of commands enter "h"\n')
 
 # main loop for getting user input
 while(1):
     cmd = input('Input a Command: ')
+    print('')
 
     if (cmd == 'q'):
         quit()
+    elif (cmd == 't'):
+        data = af.get_sweep()
+        print(data)
     elif (cmd == 'c'):
-        af.check_usb()
+        af.get_num_saved()
     elif (cmd == 'h'):
         af.print_commands()
     elif (cmd == 'p'):
@@ -53,6 +57,8 @@ while(1):
         gain = af.get_gain(num_ave)
         gotGain = True
     elif (cmd == 'x'):
+        af.execute_sweep()
+    elif (cmd == 'TEST'):
         if gotGain:
             df = af.sweep_ave(gain, num_ave)
             gotData = True
