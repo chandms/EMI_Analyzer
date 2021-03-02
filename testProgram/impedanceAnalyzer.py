@@ -19,11 +19,15 @@ sweep = {
 df = pd.DataFrame()
 
 # variables to store program state
+checkSave = False
 gotGain = False
 gotData = False
 
 # the number of sweeps to average when calculating gain/impedance
 num_ave = 1
+
+# the number of sweeps saved on the device, if negative then it hasnt been check yet
+num_saved = 0
 
 # let the user know that h can be used to get command
 print('\nThis is the default sweep:')
@@ -37,11 +41,40 @@ while(1):
 
     if (cmd == 'q'):
         quit()
-    elif (cmd == 't'):
-        data = af.get_sweep()
-        print(data)
+
     elif (cmd == 'c'):
-        af.get_num_saved()
+        num_saved = af.get_num_saved()
+        if (num_saved >= 0) checkSave = True
+
+    elif (cmd == 'o'):
+        data = af.get_sweep()
+
+        print(data)
+
+    elif (cmd == 'a'):
+        num_ave = af.set_ave()
+
+    elif (cmd == 'g'):
+        gain = af.get_gain(num_ave)
+        gotGain = True
+
+    elif (cmd == 'x'):
+        af.execute_sweep()
+
+    elif (cmd == 'NOT_IN_USE'):
+        if gotGain:
+            df = af.sweep_ave(gain, num_ave)
+            gotData = True
+            print(df)
+            print('Sweep Complete')
+        else:
+            print('Calculate Gain Factor First!')
+    elif (cmd == 'NOT_IN_USE_EITHER'):
+        if gotData:
+            af.output_csv(df)
+        else:
+            print('Execute a Sweep First!')
+
     elif (cmd == 'h'):
         af.print_commands()
     elif (cmd == 'p'):
@@ -51,26 +84,6 @@ while(1):
         af.print_sweep(sweep)
     elif (cmd == 's'):
         af.send_sweep(sweep)
-    elif (cmd == 'a'):
-        num_ave = af.set_ave()
-    elif (cmd == 'g'):
-        gain = af.get_gain(num_ave)
-        gotGain = True
-    elif (cmd == 'x'):
-        af.execute_sweep()
-    elif (cmd == 'TEST'):
-        if gotGain:
-            df = af.sweep_ave(gain, num_ave)
-            gotData = True
-            print(df)
-            print('Sweep Complete')
-        else:
-            print('Calculate Gain Factor First!')
-    elif (cmd == 'o'):
-        if gotData:
-            af.output_csv(df)
-        else:
-            print('Execute a Sweep First!')
     else:
         print('Input a valid command!')
     print('')

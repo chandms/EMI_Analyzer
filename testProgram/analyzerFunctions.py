@@ -128,7 +128,8 @@ def get_num_saved():
 
     ser.close()
 
-    return
+    return num_saved
+
 def execute_sweep():
     # open usb connection and check if success
     ser = open_usb()
@@ -143,10 +144,10 @@ def execute_sweep():
     # should read 2 back
     buff = ser.read(1)
     if (int.from_bytes(buff, "little") != 2):
-        print("Sweep Start Failed")
+        print("Sweep Execute Failed")
         return
     else:
-        print("Sweep executed and saved")
+        print("Sweep Executed and Saved To Flash")
         return
 
 
