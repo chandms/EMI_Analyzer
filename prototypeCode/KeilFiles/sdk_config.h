@@ -2105,7 +2105,7 @@
 
 
 #ifndef MEMORY_MANAGER_SMALL_BLOCK_COUNT
-#define MEMORY_MANAGER_SMALL_BLOCK_COUNT 3
+#define MEMORY_MANAGER_SMALL_BLOCK_COUNT 0
 #endif
 
 // <o> MEMORY_MANAGER_SMALL_BLOCK_SIZE -  Size of each memory blocks identified as 'small' block. 
@@ -2119,7 +2119,7 @@
 
 
 #ifndef MEMORY_MANAGER_MEDIUM_BLOCK_COUNT
-#define MEMORY_MANAGER_MEDIUM_BLOCK_COUNT 3
+#define MEMORY_MANAGER_MEDIUM_BLOCK_COUNT 0
 #endif
 
 // <o> MEMORY_MANAGER_MEDIUM_BLOCK_SIZE -  Size of each memory blocks identified as 'medium' block. 
@@ -2133,7 +2133,7 @@
 
 
 #ifndef MEMORY_MANAGER_LARGE_BLOCK_COUNT
-#define MEMORY_MANAGER_LARGE_BLOCK_COUNT 3
+#define MEMORY_MANAGER_LARGE_BLOCK_COUNT 1
 #endif
 
 // <o> MEMORY_MANAGER_LARGE_BLOCK_SIZE -  Size of each memory blocks identified as 'large' block. 
@@ -2147,7 +2147,7 @@
 
 
 #ifndef MEMORY_MANAGER_XLARGE_BLOCK_COUNT
-#define MEMORY_MANAGER_XLARGE_BLOCK_COUNT 3
+#define MEMORY_MANAGER_XLARGE_BLOCK_COUNT 2
 #endif
 
 // <o> MEMORY_MANAGER_XLARGE_BLOCK_SIZE -  Size of each memory blocks identified as 'extra large' block. 
@@ -2161,7 +2161,7 @@
 
 
 #ifndef MEMORY_MANAGER_XXLARGE_BLOCK_COUNT
-#define MEMORY_MANAGER_XXLARGE_BLOCK_COUNT 3
+#define MEMORY_MANAGER_XXLARGE_BLOCK_COUNT 0
 #endif
 
 // <o> MEMORY_MANAGER_XXLARGE_BLOCK_SIZE -  Size of each memory blocks identified as 'extra extra large' block. 
@@ -2175,7 +2175,7 @@
 
 
 #ifndef MEMORY_MANAGER_XSMALL_BLOCK_COUNT
-#define MEMORY_MANAGER_XSMALL_BLOCK_COUNT 3
+#define MEMORY_MANAGER_XSMALL_BLOCK_COUNT 0
 #endif
 
 // <o> MEMORY_MANAGER_XSMALL_BLOCK_SIZE -  Size of each memory blocks identified as 'extra small' block. 
@@ -2189,7 +2189,7 @@
 
 
 #ifndef MEMORY_MANAGER_XXSMALL_BLOCK_COUNT
-#define MEMORY_MANAGER_XXSMALL_BLOCK_COUNT 3
+#define MEMORY_MANAGER_XXSMALL_BLOCK_COUNT 0
 #endif
 
 // <o> MEMORY_MANAGER_XXSMALL_BLOCK_SIZE -  Size of each memory blocks identified as 'extra extra small' block. 
@@ -2204,7 +2204,7 @@
 // <e> MEM_MANAGER_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef MEM_MANAGER_CONFIG_LOG_ENABLED
-#define MEM_MANAGER_CONFIG_LOG_ENABLED 1
+#define MEM_MANAGER_CONFIG_LOG_ENABLED 0
 #endif
 // <o> MEM_MANAGER_CONFIG_LOG_LEVEL  - Default Severity level
  
@@ -2257,6 +2257,13 @@
 
 #ifndef MEM_MANAGER_DISABLE_API_PARAM_CHECK
 #define MEM_MANAGER_DISABLE_API_PARAM_CHECK 0
+#endif
+
+// <q>  MEM_MANAGER_DIAGNOSTICS_LOGS_ONLY  - Enable diagnostics logs.
+ 
+
+#ifndef  MEM_MANAGER_DIAGNOSTICS_LOGS_ONLY
+#define  MEM_MANAGER_DIAGNOSTICS_LOGS_ONLY 0
 #endif
 
 // <q> MEM_MANAGER_ENABLE_DIAGNOSTICS  - Enable diagnostics.

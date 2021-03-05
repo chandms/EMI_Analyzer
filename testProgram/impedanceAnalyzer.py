@@ -19,12 +19,8 @@ sweep = {
 df = pd.DataFrame()
 
 # variables to store program state
-checkSave = False
 gotGain = False
 gotData = False
-
-# the number of sweeps to average when calculating gain/impedance
-num_ave = 1
 
 # the number of sweeps saved on the device, if negative then it hasnt been check yet
 num_saved = 0
@@ -44,18 +40,18 @@ while(1):
 
     elif (cmd == 'c'):
         num_saved = af.get_num_saved()
-        if (num_saved >= 0) checkSave = True
+        if (num_saved >= 0):
+            print(f'Sweeps on flash: {num_saved}')
 
     elif (cmd == 'o'):
-        data = af.get_sweep()
-
-        print(data)
+        if (gotGain):
+            af.save_sweeps(gain)
 
     elif (cmd == 'a'):
         num_ave = af.set_ave()
 
     elif (cmd == 'g'):
-        gain = af.get_gain(num_ave)
+        gain = af.get_gain()
         gotGain = True
 
     elif (cmd == 'x'):

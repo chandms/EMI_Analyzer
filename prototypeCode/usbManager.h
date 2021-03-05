@@ -29,6 +29,8 @@
 
 #include "boards.h"
 
+#include "AD5933.h"
+
 #ifdef DEBUG_USB
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
@@ -53,6 +55,7 @@
 #define READ_SIZE 1
 #define WRITE_SIZE 32
 
+bool usbManager_sendSweep(uint32_t * freq, uint16_t * real , uint16_t * imag, MetaData * metadata);
 bool usbManager_getByte(uint8_t * buff);
 bool usbManager_writeBytes(void * buff, uint32_t numBytes);
 bool usbManager_readBytes(void * buff, uint32_t numBytes);

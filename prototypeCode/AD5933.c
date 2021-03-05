@@ -8,6 +8,7 @@
  */
 
 #include "AD5933.h"
+#include "usbManager.h"
 
 // sweeps given sweep parameters and saves sweep data to arrays from the input arguments
 // Arguments: 
@@ -59,9 +60,6 @@ bool AD5933_Sweep(Sweep * sweep, uint32_t * freq, uint16_t * real, uint16_t * im
   // start getting the data from the sweep
   bool i2c_stats = true; // track twi success
   uint8_t AD5933_status; // stores the AD5933 status
-	
-	// check AD5933 status before sweep
-	i2c_stats = AD5933_ReadStatus(&AD5933_status);
 
   // read the AD5933 status
   i2c_stats = AD5933_ReadStatus(&AD5933_status);
@@ -77,6 +75,24 @@ bool AD5933_Sweep(Sweep * sweep, uint32_t * freq, uint16_t * real, uint16_t * im
 
     // read the impedance data
     i2c_stats = AD5933_ReadData(sweep->currentData);
+		
+		uint8_t buff[8];
+		uint8_t * sel;
+		
+		sel = (uint8_t *) &sweep->currentFrequency;
+		buff[0] = sel[0];
+		buff[1] = sel[1];
+		buff[2] = sel[2];
+		buff[3] = sel[3];
+
+		// copy the real and imaginary impedance values
+		sel = (uint8_t *) &sweep->currentData[0];
+		buff[4] = sel[0];
+		buff[5] = sel[1];
+		
+		sel = (uint8_t *) &sweep->currentData[1];
+		buff[6] = sel[0];
+		buff[7] = sel[1];
 		
 		// put the data into the given arrays
 		freq[sweep->currentStep] = sweep->currentFrequency;

@@ -18,6 +18,75 @@ static uint8_t m_tx_buffer[NRF_DRV_USBD_EPSIZE];
 static volatile bool rx_ready = false;
 static volatile bool tx_ready = false;
 
+
+// Sends a sweep over usb given the sweep data
+// Arguments:
+//  * freq     - pointer to the frequency data
+//  * real     - real impedance data pointer
+//  * imag     - imaginary impedance data pointer
+//  * metadata - pointer to the sweep metadata
+//  sweepNum   - the sweep number to send
+// Returns:
+//  true if send success
+//  false if send fail
+bool usbManager_sendSweep(uint32_t * freq, uint16_t * real , uint16_t * imag, MetaData * metadata)
+{
+	uint8_t buff[8];		      // buffer to store data points
+	uint8_t * sel;			     //	pointer to select each byte in data
+	bool ret;       		    // saves if get sweep fails
+  uint16_t current = 0;  // keeps track of the current data point
+
+#ifdef DEBUG_USB
+  NRF_LOG_INFO("Sending sweep over usb");
+  NRF_LOG_FLUSH();
+#endif
+	
+	// let the python script know to start reading
+	uint8_t start[1] = {3};
+	usbManager_writeBytes(start, 1);
+
+  do {
+		// wait 10ms, this fixed an invalid data error being reported by usb_write
+		nrf_delay_ms(10);
+		
+		// cut up frequency into bytes
+		sel = (uint8_t *) &freq[current];
+		buff[0] = sel[0];
+		buff[1] = sel[1];
+		buff[2] = sel[2];
+		buff[3] = sel[3];
+
+		// copy the real and imaginary impedance values
+		sel = (uint8_t *) &real[current];
+		buff[4] = sel[0];
+		buff[5] = sel[1];
+		
+		sel = (uint8_t *) &imag[current];
+		buff[6] = sel[0];
+		buff[7] = sel[1];
+
+		// send all the data over usb
+		ret = usbManager_writeBytes(buff, 8);
+		
+		// increment data point
+		current++;
+	} while (ret && current < metadata->numPoints);
+	// wait once more, this also fixes a usb invalid data issue
+	nrf_delay_ms(10);
+	
+	// send a blank sweep to indicate sweep done
+	uint8_t done[8] = {0};
+	ret = usbManager_writeBytes(done, 8);
+
+#ifdef DEBUG_USB
+	if (ret) 
+	{ NRF_LOG_INFO("Sweep Send Success") }
+	else NRF_LOG_INFO("Sweep Send Fail");
+	NRF_LOG_FLUSH();
+#endif
+  return ret;
+}
+
 // Writes numBytes from buff over USB
 // Arguments:
 //  * buff   - The buffer to write
@@ -56,8 +125,9 @@ bool usbManager_writeBytes(void * buff, uint32_t numBytes)
   // check if fail
   if (ret != NRF_SUCCESS)
   {
+		if (ret == NRF_ERROR_BUSY)
 #ifdef DEBUG_USB
-    NRF_LOG_INFO("USB Write Fail");
+    NRF_LOG_INFO("USB Write Fail %x", ret);
     NRF_LOG_FLUSH();
 #endif
     return false;
@@ -127,6 +197,8 @@ bool usbManager_getByte(uint8_t * buff)
   if (rx_ready)
   {
     *buff = m_rx_buffer[0];
+		// clear m_rx_buffer
+		m_rx_buffer[0] = 0;
 		usbManager_flush();
 		rx_ready = false;
     return true;

@@ -43,7 +43,7 @@
 
 bool recieveSweep(Sweep * sweep);
 void set_default(Sweep * sweep);
-bool sendSweep(uint32_t sweepNum);
+bool test(uint32_t * freq, uint16_t * real, uint16_t * imag, MetaData * metadata);
 
 // --- TWI Defines ---
 
@@ -96,9 +96,10 @@ int main(void)
 
   // reset the AD5933
   i2c_stats = AD5933_SetControl(NO_OPERATION, RANGE1, GAIN1, INTERN_CLOCK, 1);
-  
+	
 	// create a new sweep
 	Sweep sweep = {0};
+	Sweep oldSweep = {0};
 
   // set the sweep to default parameters
   set_default(&sweep);
@@ -106,19 +107,17 @@ int main(void)
 	// variable to store the number of saved sweeps
 	uint32_t numSweeps = 0;
 	
+	// variable to know what sweeps have been sent
+	uint32_t pointer = 0;
+	
 	// load the config files from flash
-	flashManager_checkConfig(&numSweeps, &sweep);
+	flashManager_checkConfig(&numSweeps, &oldSweep);
 
 #ifdef DEBUG_LOG
   if (i2c_stats) {NRF_LOG_INFO("AD5933 Connected");}
   else {NRF_LOG_INFO("AD5933 Connection Failed");}
   NRF_LOG_FLUSH();
 #endif
-
-	// pointers to store sweep data
-	uint32_t * freq;
-	uint16_t * real;
-	uint16_t * imag;
 	
 	uint8_t command[1]; // store the command from usb
 	
@@ -127,20 +126,26 @@ int main(void)
 		// check if usb data is available, if it is get the first command
 		if (usbManager_readReady() && usbManager_getByte(command))
 		{
+			NRF_LOG_INFO("%x", command[0]);
+			NRF_LOG_FLUSH();
+			
 			// read the config file
 			// send the number of saved sweeps
 			if (command[0] == 1)
 			{
-				flashManager_checkConfig(&numSweeps, &sweep);
+				flashManager_checkConfig(&numSweeps, &oldSweep);
 				usbManager_writeBytes(&numSweeps, sizeof(numSweeps));
+				
+				// also reset the pointer here
+				pointer = numSweeps;
 			}
 			// execute a sweep and save to flash
 			else if (command[0] == 2)
 			{
 				// allocate memory for sweep data
-				freq = nrf_malloc(sizeof(uint32_t) * (sweep.metadata.numPoints));
-				real = nrf_malloc(sizeof(uint16_t) * (sweep.metadata.numPoints));
-				imag = nrf_malloc(sizeof(uint16_t) * (sweep.metadata.numPoints));
+				uint32_t * freq = nrf_malloc(MAX_FREQ_SIZE);
+				uint16_t * real = nrf_malloc(MAX_IMP_SIZE);
+				uint16_t * imag = nrf_malloc(MAX_IMP_SIZE);
 				
 				uint8_t buff[1]; // to save the result
 
@@ -173,96 +178,73 @@ int main(void)
 				nrf_free(real);
 				nrf_free(imag);
 			}
-			// send the most recent sweep over usb
+			// execute a sweep and immedietly send it over usb, do not save to flash
 			else if (command[0] == 3)
 			{
-				// send back 3
-				uint8_t buff[1] = {3};
-				usbManager_writeBytes(buff, 1);
+				// allocate memory for sweeps
+				uint32_t * freq = nrf_malloc(MAX_FREQ_SIZE);
+				uint16_t * real = nrf_malloc(MAX_IMP_SIZE);
+				uint16_t * imag = nrf_malloc(MAX_IMP_SIZE);
 				
-				// send the most recent sweep
-				if ((numSweeps > 0) && sendSweep(numSweeps))
+				// execute the sweep
+				if (AD5933_Sweep(&sweep, freq, real, imag))
 				{
-					NRF_LOG_INFO("Sweep send success");
-					numSweeps -= 1;
+					NRF_LOG_INFO("Sending Sweep");
+					NRF_LOG_FLUSH();
+					if (usbManager_sendSweep(freq, real, imag, &sweep.metadata))
+					{
+						NRF_LOG_INFO("Sweep Send Success");
+					}
+					else
+					{
+						NRF_LOG_INFO("Sweep Send Fail");
+					}
+					NRF_LOG_FLUSH();
 				}
-				else
+				
+				// free the memory
+				nrf_free(freq);
+				nrf_free(real);
+				nrf_free(imag);
+			}
+			// send the pointer sweep over usb
+			else if (command[0] == 4)
+			{
+				// allocate memory for sweeps
+				uint32_t * freq = nrf_malloc(MAX_FREQ_SIZE);
+				uint16_t * real = nrf_malloc(MAX_IMP_SIZE);
+				uint16_t * imag = nrf_malloc(MAX_IMP_SIZE);
+				
+				// if pointer is at file 0, set it at the most recent sweep saved
+				if (pointer == 0) pointer = numSweeps;
+					
+				// get the sweep data from flash
+				if (flashManager_getSweep(freq, real, imag, &sweep.metadata, pointer))
 				{
-					NRF_LOG_INFO("Sweep send fail");
+					if (usbManager_sendSweep(freq, real, imag, &sweep.metadata))
+					{
+						NRF_LOG_INFO("Sweep send from flash success");
+						NRF_LOG_FLUSH();
+					}
+					else
+					{
+						NRF_LOG_INFO("Sweep send fail");
+						NRF_LOG_FLUSH();
+					}
 				}
-				NRF_LOG_FLUSH();
+				
+				// free memory
+				nrf_free(freq);
+				nrf_free(real);
+				nrf_free(imag);
+				
+				// move pointer down
+				pointer--;
 			}
     }
     // Sleep CPU only if there was no interrupt since last loop processing
     __WFE();
 	}
-}
-
-bool sendSweep(uint32_t sweepNum)
-{
-	// allocate memory for sweeps
-	uint32_t * freq = nrf_malloc(MAX_FREQ_SIZE);
-	uint16_t * real = nrf_malloc(MAX_IMP_SIZE);
-	uint16_t * imag = nrf_malloc(MAX_IMP_SIZE);
-	
-	// check if malloc fail
-	if (freq == NULL || real == NULL || imag == NULL)
-	{
-#ifdef DEBUG_LOG
-		NRF_LOG_INFO("Memory allocation failed. Send sweep fail");
-		NRF_LOG_FLUSH();
-#endif
-		// free any memory that was successful
-		nrf_free(freq);
-		nrf_free(real);
-		nrf_free(imag);
-		return false;
-	}
-	
-	MetaData metadata;		 // create a metadata to store current sweep data
-	uint8_t buff[8];		  // buffer to store data points
-	uint8_t * sel;			 //	pointer to select each byte in data
-	bool ret = false;		// saves if get sweep fails
-	
-	// get sweep and send it over USB
-	if(flashManager_getSweep(freq, real, imag, &metadata, sweepNum))
-	{
-		// loop through each point in the sweep and send it over usb
-		for (int i = 0; i < metadata.numPoints; i++)
-		{
-			// cut up currentFrequency into bytes
-			sel = (uint8_t *) &freq[i];
-			buff[0] = sel[0];
-			buff[1] = sel[1];
-			buff[2] = sel[2];
-			buff[3] = sel[3];
-
-			// copy the real and imaginary impedance values
-			sel = (uint8_t *) &real[i];
-			buff[4] = sel[0];
-			buff[5] = sel[1];
-			
-			sel = (uint8_t *) &imag[i];
-			buff[6] = sel[0];
-			buff[7] = sel[1];
-
-			// send all the data over usb
-			usbManager_writeBytes(buff, 8);
-		}
-		ret = true;
-	}
-	
-	// send a blank sweep to indicate sweep done
-	uint8_t blank[8] = {0};
-	usbManager_writeBytes(blank, 8);
-	
-	// free the memory
-	nrf_free(freq);
-	nrf_free(real);
-	nrf_free(imag);
-	
-	// return if the sweep send successs
-	return ret;
 }
 
 // recieves usb data for a sweep parameter over usb
@@ -279,8 +261,8 @@ void set_default(Sweep * sweep)
 {
   // set the default sweep parameters
   sweep->start 							= 1000;
-  sweep->delta 							= 100;
-  sweep->steps 							= 490;
+  sweep->delta 							= 1;
+  sweep->steps 							= 99;
   sweep->cycles 						= 15;
   sweep->cyclesMultiplier 	= NO_MULT;
   sweep->range 							= RANGE1;
