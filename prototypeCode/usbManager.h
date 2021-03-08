@@ -43,7 +43,7 @@
 #endif
 
 // LED for USB status
-#define LED_USB_RESUME      (BSP_BOARD_LED_0)
+#define LED_USB_RESUME      1
 
 #define CDC_ACM_COMM_INTERFACE  0
 #define CDC_ACM_COMM_EPIN       NRF_DRV_USBD_EPIN2

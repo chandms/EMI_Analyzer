@@ -294,16 +294,16 @@ void usbd_user_ev_handler(app_usbd_event_type_t event)
   switch (event)
   {
     case APP_USBD_EVT_DRV_SUSPEND:
-      bsp_board_led_off(LED_USB_RESUME);
+      //bsp_board_led_off(LED_USB_RESUME);
       break;
     case APP_USBD_EVT_DRV_RESUME:
-      bsp_board_led_on(LED_USB_RESUME);
+      //bsp_board_led_on(LED_USB_RESUME);
       break;
     case APP_USBD_EVT_STARTED:
       break;
     case APP_USBD_EVT_STOPPED:
       app_usbd_disable();
-      bsp_board_led_off(LED_USB_RESUME);
+      //bsp_board_led_off(LED_USB_RESUME);
       break;
     case APP_USBD_EVT_POWER_DETECTED:
       if (!nrf_drv_usbd_is_enabled())
@@ -330,6 +330,7 @@ static void init_usb(void)
     .ev_state_proc = usbd_user_ev_handler
   };
 
+	// init the low frequency clock
   ret = nrf_drv_clock_init();
   APP_ERROR_CHECK(ret);
 
