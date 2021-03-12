@@ -149,7 +149,7 @@ bool AD5933_SetCycles(uint16_t cycles, uint8_t multiplier);
 bool AD5933_SetControl(uint8_t command, uint8_t range, uint8_t gain, uint8_t clock, uint8_t reset);
 bool AD5933_ReadStatus(uint8_t * buff);
 bool AD5933_ReadTemp(int * temp);
-bool AD5933_ReadData(uint8_t * buff);
+bool AD5933_ReadData(uint16_t * buff);
 
 // Wire (I2C) helper functions
 bool AD5933_ReadBytes(uint8_t * buff, uint8_t numbytes, uint8_t reg);

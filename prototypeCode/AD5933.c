@@ -60,6 +60,8 @@ bool AD5933_Sweep(Sweep * sweep, uint32_t * freq, uint16_t * real, uint16_t * im
   // start getting the data from the sweep
   bool i2c_stats = true; // track twi success
   uint8_t AD5933_status; // stores the AD5933 status
+	
+	uint16_t data[2]; // buffer to hold the impedance data
 
   // read the AD5933 status
   i2c_stats = AD5933_ReadStatus(&AD5933_status);
@@ -69,35 +71,32 @@ bool AD5933_Sweep(Sweep * sweep, uint32_t * freq, uint16_t * real, uint16_t * im
   {
     // wait till measurement is done
     do{
+			nrf_delay_ms(10);
       i2c_stats = AD5933_ReadStatus(&AD5933_status);
-      nrf_delay_ms(10);
     } while (((AD5933_status & STATUS_DATA) != STATUS_DATA) && i2c_stats);
 
     // read the impedance data
-    i2c_stats = AD5933_ReadData(sweep->currentData);
+    i2c_stats = AD5933_ReadData(data);
 		
-		uint8_t buff[8];
-		uint8_t * sel;
-		
-		sel = (uint8_t *) &sweep->currentFrequency;
-		buff[0] = sel[0];
-		buff[1] = sel[1];
-		buff[2] = sel[2];
-		buff[3] = sel[3];
-
-		// copy the real and imaginary impedance values
-		sel = (uint8_t *) &sweep->currentData[0];
-		buff[4] = sel[0];
-		buff[5] = sel[1];
-		
-		sel = (uint8_t *) &sweep->currentData[1];
-		buff[6] = sel[0];
-		buff[7] = sel[1];
+		if (!i2c_stats)
+		{
+#ifdef DEBUG_TWI
+			NRF_LOG_INFO("Read Data Fail");
+			NRF_LOG_FLUSH();
+#endif
+		}
+		else
+		{
+#ifdef DEBUG_TWI
+			NRF_LOG_INFO("Freq: %d Real: %d Imag: %d", sweep->currentFrequency, data[0], data[1]);
+			NRF_LOG_FLUSH();
+#endif
+		}
 		
 		// put the data into the given arrays
 		freq[sweep->currentStep] = sweep->currentFrequency;
-		real[sweep->currentStep] = sweep->currentData[0];
-		imag[sweep->currentStep] = sweep->currentData[1];
+		real[sweep->currentStep] = data[0];
+		imag[sweep->currentStep] = data[1];
 
     // increment the sweep
     i2c_stats = AD5933_SetControl(INCREMENT_FREQ, sweep->range, sweep->gain, sweep->clockSource, 0);
@@ -141,7 +140,7 @@ bool AD5933_SetStart(uint32_t start, uint32_t clkFreq)
   buff[1] = (start >> 8) & 0xFF;
   buff[2] = start & 0xFF;
 
-#ifdef DEBUG_TWI
+#ifdef DEBUG_TWI_ALL
   NRF_LOG_INFO("Sending 0x%x%x%x to register 0x%x", buff[0], buff[1], buff[2], START_FREQ_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -174,7 +173,7 @@ bool AD5933_SetDelta(uint32_t delta, uint32_t clkFreq)
   buff[1] = (delta >> 8) & 0xFF;
   buff[2] = delta & 0xFF;
 
-#ifdef DEBUG_TWI
+#ifdef DEBUG_TWI_ALL
   NRF_LOG_INFO("Sending 0x%x%x%x to register 0x%x", buff[0], buff[1], buff[2], DELTA_FREQ_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -203,7 +202,7 @@ bool AD5933_SetSteps(uint16_t steps)
   buff[0] = (steps >> 8) & 0x01;
   buff[1] = steps & 0xFF;
 
-#ifdef DEBUG_TWI
+#ifdef DEBUG_TWI_ALL
   NRF_LOG_INFO("Sending 0x%x%x to register 0x%x", buff[0], buff[1], NUM_STEPS_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -233,7 +232,7 @@ bool AD5933_SetCycles(uint16_t cycles, uint8_t multiplier)
   buff[0] = ((cycles >> 8) & 0x01) | multiplier;
   buff[1] = cycles & 0xFF;
 
-#ifdef DEBUG_TWI
+#ifdef DEBUG_TWI_ALL
   NRF_LOG_INFO("Sending 0x%x%x to register 0x%x", buff[0], buff[1], NUM_CYCLES_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -264,7 +263,7 @@ bool AD5933_SetControl(uint8_t command, uint8_t range, uint8_t gain, uint8_t clo
   buff[0] = (command << 4) | ((range << 2) | gain);
   buff[1] = (reset << 4) | (clock << 3);
 
-#ifdef DEBUG_TWI
+#ifdef DEBUG_TWI_ALL
   NRF_LOG_INFO("Sending 0x%x to register 0x%x and 0x%x to register 0x%x", buff[0], CONTROL1_REG, buff[1], CONTROL2_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -289,7 +288,7 @@ bool AD5933_ReadStatus(uint8_t * buff)
   // read the status byte
   status = AD5933_ReadBytes(buff, 1, STATUS_REG);
 
-#ifdef DEBUG_TWI
+#ifdef DEBUG_TWI_ALL
   NRF_LOG_INFO("Read 0x%x from register 0x%x", buff[0], STATUS_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -312,7 +311,7 @@ bool AD5933_ReadTemp(int * temp)
   // read the temperature register
   AD5933_ReadBytes(buff, 2, TEMP_REG);
 
-#ifdef DEBUG_TWI
+#ifdef DEBUG_TWI_ALL
   NRF_LOG_INFO("Read 0x%x%x from register 0x%x", buff[0], buff[1], TEMP_REG);
   NRF_LOG_FLUSH();
 #endif
@@ -340,11 +339,11 @@ bool AD5933_ReadTemp(int * temp)
 // Return value:
 //  false if I2C error
 //  true if no error
-bool AD5933_ReadData(uint8_t * data)
+bool AD5933_ReadData(uint16_t * data)
 {
   // read the data from the data register
-  if (!AD5933_ReadBytes(data, 2, REAL_REG)) return false;
-  if (!AD5933_ReadBytes(&data[2], 2, IMAG_REG)) return false;
+  if (!AD5933_ReadBytes((uint8_t *) data, 2, REAL_REG)) return false;
+  if (!AD5933_ReadBytes((uint8_t *) &data[1], 2, IMAG_REG)) return false;
 
   // success
   return true;
@@ -406,7 +405,7 @@ bool AD5933_SetPointer(uint8_t reg)
   // set data buffer
   uint8_t buff[2] = {SET_POINTER, reg};
 
-#ifdef DEBUG_TWI
+#ifdef DEBUG_TWI_ALL
   NRF_LOG_INFO("Setting Pointer to %x", reg);
   NRF_LOG_FLUSH();
 #endif
@@ -442,7 +441,7 @@ bool AD5933_Write(uint8_t data, uint8_t reg)
   // set data buffer
   uint8_t buff[2] = {reg, data};
 
-#ifdef DEBUG_TWI
+#ifdef DEBUG_TWI_ALL
   NRF_LOG_INFO("Writing 0x%x to register 0x%x", data, reg);
   NRF_LOG_FLUSH();
 #endif
@@ -489,7 +488,7 @@ bool AD5933_BlockWrite(uint8_t * buff, uint8_t numbytes)
   data[0] = BLOCK_WRITE;
   data[1] = numbytes;
 
-#ifdef DEBUG_TWI
+#ifdef DEBUG_TWI_ALL
   NRF_LOG_INFO("Block Writing %d bytes to pointer", numbytes);
   NRF_LOG_FLUSH();
 #endif
@@ -528,7 +527,7 @@ bool AD5933_ReadByte(uint8_t * buff)
   // stores error code
   ret_code_t err_code;
 
-#ifdef DEBUG_TWI
+#ifdef DEBUG_TWI_ALL
   NRF_LOG_INFO("Reading a byte from pointer");
   NRF_LOG_FLUSH();
 #endif
@@ -565,7 +564,7 @@ bool AD5933_BlockRead(uint8_t * buff, uint8_t numbytes)
   // set data buffer
   uint8_t data[2] = {BLOCK_READ, numbytes};
 
-#ifdef DEBUG_TWI
+#ifdef DEBUG_TWI_ALL
   NRF_LOG_INFO("Block reading %d bytes from pointer", numbytes);
   NRF_LOG_FLUSH();
 #endif

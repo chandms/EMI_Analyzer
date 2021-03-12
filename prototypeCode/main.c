@@ -357,8 +357,8 @@ void set_default(Sweep * sweep)
   sweep->start 							= 1000;
   sweep->delta 							= 100;
   sweep->steps 							= 490;
-  sweep->cycles 						= 15;
-  sweep->cyclesMultiplier 	= NO_MULT;
+  sweep->cycles 						= 511;
+  sweep->cyclesMultiplier 	= TIMES4;
   sweep->range 							= RANGE1;
   sweep->clockSource 				= INTERN_CLOCK;
   sweep->clockFrequency 		= CLK_FREQ;
@@ -438,8 +438,8 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
 		nrf_drv_gpiote_out_toggle(LED_SWEEP);
 		saveSweep();
 		nrf_drv_gpiote_out_toggle(LED_SWEEP);
-		compares++;
 		nrf_drv_rtc_cc_set(&rtc, 0, compares * (COMPARE_TIME * RTC_FREQ), true);
+	  compares++;
 	}
 	// currently not being used
 	else if (int_type == NRF_DRV_RTC_INT_TICK)
@@ -489,14 +489,14 @@ void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
     case NRF_DRV_TWI_EVT_DONE:
       if (p_event -> xfer_desc.type == NRF_DRV_TWI_XFER_RX)
       {
-#if defined(DEBUG_LOG) && defined(DEBUG_TWI)
+#if defined(DEBUG_LOG) && defined(DEBUG_TWI_ALL)
         NRF_LOG_INFO("TWI Read Success");
         NRF_LOG_FLUSH();
 #endif
       }
       else if (p_event -> xfer_desc.type == NRF_DRV_TWI_XFER_TX)
       {
-#if defined(DEBUG_LOG) && defined(DEBUG_TWI)
+#if defined(DEBUG_LOG) && defined(DEBUG_TWI_ALL)
         NRF_LOG_INFO("TWI Write Success");
         NRF_LOG_FLUSH();
 #endif
@@ -509,7 +509,7 @@ void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
       break;
 
     case NRF_DRV_TWI_EVT_ADDRESS_NACK:
-#if defined(DEBUG_LOG) && defined(DEBUG_TWI)
+#if defined(DEBUG_LOG) && defined(DEBUG_TWI_ALL)
       NRF_LOG_INFO("TWI Address Not Found");
       NRF_LOG_FLUSH();
 #endif
@@ -521,7 +521,7 @@ void twi_handler(nrf_drv_twi_evt_t const * p_event, void * p_context)
       break;
 
     case NRF_DRV_TWI_EVT_DATA_NACK:
-#if defined(DEBUG_LOG) && defined(DEBUG_TWI)
+#if defined(DEBUG_LOG) && defined(DEBUG_TWI_ALL)
       NRF_LOG_INFO("TWI Transfer Failed");
       NRF_LOG_FLUSH();
 #endif

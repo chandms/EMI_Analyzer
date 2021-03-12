@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import struct
 
-comPort = 'COM7'
+comPort = 'COM10'
 
 def save_sweeps(gain):
     numSaved = get_num_saved()
@@ -56,6 +56,9 @@ def get_gain():
 
 # calculates the phase in degrees given real and imaginary impedance
 def calc_phase(real, imag):
+    if (real == 0):
+        real = 1
+
     p = math.degrees(math.atan(imag / real))
     if (real < 0):
         p = p + 180
@@ -175,7 +178,7 @@ def get_sweep(fromFlash=True):
         imp[0] = int.from_bytes(buff[4:6], "big", signed=True)
         imp[1] = int.from_bytes(buff[6:8], "big", signed=True)
 
-        # print(f'{freq} {imp}')
+        #print(f'{freq} {imp}')
 
         data.append((freq, imp[0], imp[1]))
 
