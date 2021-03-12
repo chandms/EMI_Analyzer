@@ -3,8 +3,9 @@ import math
 import numpy as np
 import pandas as pd
 import struct
+import time
 
-comPort = 'COM10'
+comPort = 'COM7'
 
 def save_sweeps(gain):
     numSaved = get_num_saved()
@@ -13,6 +14,9 @@ def save_sweeps(gain):
         print('No sweeps on flash to save. Aborting')
         return
 
+    print('Files will be saved in this format: (filename)_(sweep number). example: ZK18_1')
+    name = input('Input a filename: ')
+
     for i in range(numSaved, 0, -1):
         print(f'Saving Sweep #{i}')
         data = get_sweep(fromFlash=True)
@@ -20,7 +24,9 @@ def save_sweeps(gain):
         df = create_dataframe(data)
         print(df)
         print(f'Sweep #{i}')
-        output_csv(df)
+        filename = name + '_' + str(i)
+        output_csv(df, filename)
+        time.sleep(1)
 
     return
 
@@ -31,9 +37,7 @@ def sweep_now():
 
     return
 
-def output_csv(df):
-    name = input('File Name: ')
-
+def output_csv(df, name):
     df.to_csv(f'savedData\{name}.csv')
     print(f'Saved To: ./savedData/{name}.csv')
 
