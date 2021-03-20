@@ -82,7 +82,7 @@
 
 #define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
-#define DEVICE_NAME                     "Nordic_UART"                               /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "ble-dev"                               /**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define APP_BLE_OBSERVER_PRIO           3                                           /**< Application's BLE observer priority. You shouldn't need to modify this value. */
@@ -480,6 +480,10 @@ void gatt_init(void)
 void bsp_event_handler(bsp_event_t event)
 {
     uint32_t err_code;
+		static uint8_t data_array[] = {0x45, 0x65, 0x6C, 0x6C, 0x6F, 0x0D};
+    static uint8_t index = sizeof(data_array);
+//		static uint8_t data_array[BLE_NUS_MAX_DATA_LEN];
+//    static uint8_t index = 0;
     switch (event)
     {
         case BSP_EVENT_SLEEP:
@@ -504,6 +508,23 @@ void bsp_event_handler(bsp_event_t event)
                 }
             }
             break;
+				case BSP_EVENT_KEY_3:
+					NRF_LOG_INFO("Button is pressed.");
+					NRF_LOG_DEBUG("Ready to send data over BLE NUS");
+					NRF_LOG_HEXDUMP_DEBUG(data_array, index);
+
+					do
+					{
+							uint16_t length = (uint16_t)index;
+							err_code = ble_nus_data_send(&m_nus, data_array, &length, m_conn_handle);
+							if ((err_code != NRF_ERROR_INVALID_STATE) &&
+									(err_code != NRF_ERROR_RESOURCES) &&
+									(err_code != NRF_ERROR_NOT_FOUND))
+							{
+									APP_ERROR_CHECK(err_code);
+							}
+					} while (err_code == NRF_ERROR_RESOURCES);
+					break;
 
         default:
             break;
