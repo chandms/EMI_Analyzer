@@ -19,8 +19,8 @@ command = 'Do you hear me?'
 # loop = asyncio.get_event_loop()
 # loop.run_until_complete(run())
 
-def uart_data_received(sender, data):
-    print(f'RX> {data}')
+def uart_data_received(sender, raw_data):
+    print(f'RX> {raw_data.decode()}')
 
 print('Connecting...')
 async def run(ADDRESS, loop):
@@ -33,7 +33,7 @@ async def run(ADDRESS, loop):
         #   await client.write_gatt_char(UUID_NORDIC_TX, bytearray(c[0:10]), True)
         #   c = c[20:]
         print('Waiting for data')
-        await asyncio.sleep(5.0, loop=loop) # wait for a response
+        await asyncio.sleep(10.0, loop=loop) # wait for a response
         print('Done!')
 
 
