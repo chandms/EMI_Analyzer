@@ -20,7 +20,7 @@ command = 'Do you hear me?'
 # loop.run_until_complete(run())
 
 def uart_data_received(sender, raw_data):
-    print(f'RX> {raw_data.decode()}')
+    print(f'RX> ({len(raw_data)} Bytes) {raw_data.decode()}')
 
 print('Connecting...')
 async def run(ADDRESS, loop):

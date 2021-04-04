@@ -357,7 +357,6 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
 {
     uint32_t err_code;
-
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
@@ -480,6 +479,8 @@ void gatt_init(void)
 void bsp_event_handler(bsp_event_t event)
 {
     uint32_t err_code;
+		static uint16_t data_size, data_sent, package_size; 
+		static uint8_t n_package;
 		static uint8_t data_array[] = {0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 
 			0x76, 0x65, 0x72, 0x79, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 
 			0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 
@@ -491,9 +492,9 @@ void bsp_event_handler(bsp_event_t event)
 			0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 
 			0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 
 			0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6D, 0x65, 0x73, 0x73, 0x61, 
-			0x67, 0x65, 0x20, 0x28, 0x31, 0x37, 0x35, 0x20, 0x42, 0x79, 0x74, 0x65, 0x73, 0x29, 0x2E};
-    static uint8_t index = sizeof(data_array);
-//		static uint8_t data_array[BLE_NUS_MAX_DATA_LEN];
+			0x67, 0x65, 0x2E};
+//    static uint8_t index = sizeof(data_array);
+		static uint8_t package[BLE_NUS_MAX_DATA_LEN];
 //    static uint8_t index = 0;
     switch (event)
     {
@@ -521,20 +522,48 @@ void bsp_event_handler(bsp_event_t event)
             break;
 				case BSP_EVENT_KEY_3:
 					NRF_LOG_INFO("Button is pressed.");
-					NRF_LOG_DEBUG("Ready to send data over BLE NUS");
-					NRF_LOG_HEXDUMP_DEBUG(data_array, index);
-
-					do
+				
+					data_sent = 0;
+					data_size = sizeof(data_array);
+					NRF_LOG_INFO("Ready to send %d byte(s) data over BLE NUS", data_size);
+					n_package = data_size / BLE_NUS_MAX_DATA_LEN;
+					if (data_size % BLE_NUS_MAX_DATA_LEN > 0) 
 					{
-							uint16_t length = (uint16_t)index;
-							err_code = ble_nus_data_send(&m_nus, data_array, &length, m_conn_handle);
-							if ((err_code != NRF_ERROR_INVALID_STATE) &&
-									(err_code != NRF_ERROR_RESOURCES) &&
-									(err_code != NRF_ERROR_NOT_FOUND))
-							{
-									APP_ERROR_CHECK(err_code);
-							}
-					} while (err_code == NRF_ERROR_RESOURCES);
+							n_package++;
+					}
+					NRF_LOG_INFO("Break data into %d package(s)", n_package);
+				
+					for (int i=0; i < n_package; i++)
+					{
+						if (data_sent + BLE_NUS_MAX_DATA_LEN <= data_size) 
+						{
+								package_size = BLE_NUS_MAX_DATA_LEN;
+						}
+						else 
+						{
+								package_size = data_size - data_sent;
+						}
+						for (int j=0; j < package_size; j++) 
+						{
+								package[j] = data_array[data_sent];
+								data_sent++;
+						}
+						NRF_LOG_HEXDUMP_DEBUG(package, package_size);
+						NRF_LOG_INFO("Sending package #%d size %d byte(s)", i+1, package_size);
+						do
+						{
+								uint16_t length = (uint16_t)package_size;
+								err_code = ble_nus_data_send(&m_nus, package, &length, m_conn_handle);
+								if ((err_code != NRF_ERROR_INVALID_STATE) &&
+										(err_code != NRF_ERROR_RESOURCES) &&
+										(err_code != NRF_ERROR_NOT_FOUND))
+								{
+										APP_ERROR_CHECK(err_code);
+								}
+						} while (err_code == NRF_ERROR_RESOURCES);
+					}
+				
+					
 					break;
 
         default:
