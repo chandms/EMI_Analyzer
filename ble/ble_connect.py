@@ -11,6 +11,18 @@ UUID_NORDIC_TX = '6E400002-B5A3-F393-E0A9-E50E24DCCA9E'
 
 command = 'Do you hear me?'
 
+class MetaData():
+    def __init__(self):
+        self.n_freq = 0
+        self.temperature = 0
+        self.time = 0
+    
+    def __str__(self):
+        return f'Number of frequency data = {self.n_freq} \n' \
+               f'Time = {self.time} \n' \
+               f'temperature = {self.temperature}'
+                
+
 # async def run():
 #     devices = await BleakScanner.discover()
 #     for d in devices:
@@ -20,7 +32,15 @@ command = 'Do you hear me?'
 # loop.run_until_complete(run())
 
 def uart_data_received(sender, raw_data):
-    print(f'RX> ({len(raw_data)} Bytes) {raw_data.decode()}')
+    # print(f'RX> ({len(raw_data)} Bytes) {raw_data.decode()}')
+    print(f'RX> Recieved {len(raw_data)} Bytes')
+    print(raw_data)
+    message_type = raw_data[0]
+    if message_type == 1: # Meta Data
+        print(f'Meta Data recieved')
+        meta_data.n_freq = int.from_bytes(raw_data[1:5], byteorder='little', signed=False)
+        meta_data.time = int.from_bytes(raw_data[5:9], byteorder='little', signed=False)
+        meta_data.temperature = int.from_bytes(raw_data[9:11], byteorder='little', signed=False)
 
 print('Connecting...')
 async def run(ADDRESS, loop):
@@ -36,6 +56,7 @@ async def run(ADDRESS, loop):
         await asyncio.sleep(10.0, loop=loop) # wait for a response
         print('Done!')
 
-
+meta_data = MetaData()
 loop = asyncio.get_event_loop()
 loop.run_until_complete(run(ADDRESS, loop))
+print(meta_data)

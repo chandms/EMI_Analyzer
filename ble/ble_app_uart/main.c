@@ -80,9 +80,11 @@
 #include "nrf_log_ctrl.h"
 #include "nrf_log_default_backends.h"
 
+#include "sweep.h"
+
 #define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
-#define DEVICE_NAME                     "ble-dev"                               /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "ble-dev"                               		/**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define APP_BLE_OBSERVER_PRIO           3                                           /**< Application's BLE observer priority. You shouldn't need to modify this value. */
@@ -473,6 +475,7 @@ void gatt_init(void)
 
 
 
+
 void send_package_ble(uint8_t *package, uint16_t package_size)
 {
 		uint32_t err_code;
@@ -486,6 +489,32 @@ void send_package_ble(uint8_t *package, uint16_t package_size)
 						APP_ERROR_CHECK(err_code);
 				}
 		} while (err_code == NRF_ERROR_RESOURCES);
+}
+
+void send_meta_data_ble(MetaData *meta_data){
+	
+	NRF_LOG_INFO("Sending metadata.");
+	static uint8_t buff[11];
+	static uint8_t *ptr; 
+	uint8_t i = 1;
+	buff[0] = 1;
+	ptr = (uint8_t *)&meta_data->numPoints;
+	for (; i < 5; i++) {
+		buff[i] = *ptr;
+		ptr++;
+	}
+	ptr = (uint8_t *)&meta_data->time;
+	for (; i < 9; i++) {
+		buff[i] = *ptr;
+		ptr++;
+	}
+	ptr = (uint8_t *)&meta_data->temp;
+	for (; i < 11; i++) {
+		buff[i] = *ptr;
+		ptr++;
+	}
+	
+	send_package_ble(buff, (uint16_t)sizeof(buff));
 }
 
 /**@brief Function for handling events from the BSP module.
@@ -509,9 +538,12 @@ void bsp_event_handler(bsp_event_t event)
 			0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 
 			0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6D, 0x65, 0x73, 0x73, 0x61, 
 			0x67, 0x65, 0x2E};
-//    static uint8_t index = sizeof(data_array);
 		static uint8_t package[BLE_NUS_MAX_DATA_LEN];
-//    static uint8_t index = 0;
+			
+		static MetaData meta_data = {
+			.time = 10, .temp = 25, .numPoints = 1000
+		};
+		
     switch (event)
     {
         case BSP_EVENT_SLEEP:
@@ -549,7 +581,7 @@ void bsp_event_handler(bsp_event_t event)
 					}
 					NRF_LOG_INFO("Break data into %d package(s)", n_package);
 				
-					for (int i=0; i < n_package; i++)
+					for (uint8_t i=0; i < n_package; i++)
 					{
 						if (data_sent + BLE_NUS_MAX_DATA_LEN <= data_size) 
 						{
@@ -559,7 +591,7 @@ void bsp_event_handler(bsp_event_t event)
 						{
 								package_size = data_size - data_sent;
 						}
-						for (int j=0; j < package_size; j++) 
+						for (uint16_t j=0; j < package_size; j++) 
 						{
 								package[j] = data_array[data_sent];
 								data_sent++;
@@ -567,20 +599,16 @@ void bsp_event_handler(bsp_event_t event)
 						NRF_LOG_HEXDUMP_DEBUG(package, package_size);
 						NRF_LOG_INFO("Sending package #%d size %d byte(s)", i+1, package_size);
 						send_package_ble(package, package_size);
-//						do
-//						{
-//								uint16_t length = (uint16_t)package_size;
-//								err_code = ble_nus_data_send(&m_nus, package, &length, m_conn_handle);
-//								if ((err_code != NRF_ERROR_INVALID_STATE) &&
-//										(err_code != NRF_ERROR_RESOURCES) &&
-//										(err_code != NRF_ERROR_NOT_FOUND))
-//								{
-//										APP_ERROR_CHECK(err_code);
-//								}
-//						} while (err_code == NRF_ERROR_RESOURCES);
 					}
 				
 					
+					break;
+					
+				case BSP_EVENT_KEY_2:
+					NRF_LOG_INFO("Transfering dummy sweep file.");
+					send_meta_data_ble(&meta_data);	
+					NRF_LOG_INFO("The sweep has %d frequency data", meta_data.numPoints);
+				
 					break;
 
         default:
