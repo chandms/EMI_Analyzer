@@ -33,14 +33,25 @@ class MetaData():
 
 def uart_data_received(sender, raw_data):
     # print(f'RX> ({len(raw_data)} Bytes) {raw_data.decode()}')
-    print(f'RX> Recieved {len(raw_data)} Bytes')
-    print(raw_data)
+    # print(f'RX> Recieved {len(raw_data)} Bytes')
     message_type = raw_data[0]
     if message_type == 1: # Meta Data
         print(f'Meta Data recieved')
         meta_data.n_freq = int.from_bytes(raw_data[1:5], byteorder='little', signed=False)
         meta_data.time = int.from_bytes(raw_data[5:9], byteorder='little', signed=False)
         meta_data.temperature = int.from_bytes(raw_data[9:11], byteorder='little', signed=False)
+    
+    elif message_type == 0: # sweep data
+        print(raw_data)
+        print(f'RX> Recieved {len(raw_data)} Bytes')
+        freq = int.from_bytes(raw_data[1:5], byteorder='little', signed=False)
+        real = int.from_bytes(raw_data[5:7], byteorder='little', signed=False)
+        imag = int.from_bytes(raw_data[7:9], byteorder='little', signed=False)
+        sweep.append({
+            'freq': freq, 
+            'real': real, 
+            'imag': imag
+        })
 
 print('Connecting...')
 async def run(ADDRESS, loop):
@@ -53,10 +64,13 @@ async def run(ADDRESS, loop):
         #   await client.write_gatt_char(UUID_NORDIC_TX, bytearray(c[0:10]), True)
         #   c = c[20:]
         print('Waiting for data')
-        await asyncio.sleep(10.0, loop=loop) # wait for a response
+        await asyncio.sleep(5.0, loop=loop) # wait for a response
         print('Done!')
 
 meta_data = MetaData()
+sweep = []
 loop = asyncio.get_event_loop()
 loop.run_until_complete(run(ADDRESS, loop))
 print(meta_data)
+print(f'Got {len(sweep)} data')
+print(sweep)
