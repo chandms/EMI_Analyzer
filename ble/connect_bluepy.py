@@ -2,6 +2,9 @@ from bluepy.btle import Scanner, DefaultDelegate
 
 
 ADDRESS = 'C6:3F:7F:8E:A7:D1'
+UART_NORDIC = '6E400001-B5A3-F393-E0A9-E50E24DCCA9E'
+UUID_NORDIC_RX = '6E400003-B5A3-F393-E0A9-E50E24DCCA9E'
+UUID_NORDIC_TX = '6E400002-B5A3-F393-E0A9-E50E24DCCA9E'
 
 class ScanDelegate(DefaultDelegate):
     def __init__(self):
