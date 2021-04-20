@@ -35,23 +35,26 @@ def uart_data_received(sender, raw_data):
     # print(f'RX> ({len(raw_data)} Bytes) {raw_data.decode()}')
     # print(f'RX> Recieved {len(raw_data)} Bytes')
     message_type = raw_data[0]
-    if message_type == 1: # Meta Data
+    if message_type == 0: # Meta Data
         print(f'Meta Data recieved')
         meta_data.n_freq = int.from_bytes(raw_data[1:5], byteorder='little', signed=False)
         meta_data.time = int.from_bytes(raw_data[5:9], byteorder='little', signed=False)
         meta_data.temperature = int.from_bytes(raw_data[9:11], byteorder='little', signed=False)
     
-    elif message_type == 0: # sweep data
-        print(raw_data)
+    else:
+        freq_got = int(message_type)
+        print(f'Number of frequency = {freq_got}')
         print(f'RX> Recieved {len(raw_data)} Bytes')
-        freq = int.from_bytes(raw_data[1:5], byteorder='little', signed=False)
-        real = int.from_bytes(raw_data[5:7], byteorder='little', signed=False)
-        imag = int.from_bytes(raw_data[7:9], byteorder='little', signed=False)
-        sweep.append({
-            'freq': freq, 
-            'real': real, 
-            'imag': imag
-        })
+        for i in range(freq_got):
+            base_index = i*8
+            freq = int.from_bytes(raw_data[base_index+1:base_index+5], byteorder='little', signed=False)
+            real = int.from_bytes(raw_data[base_index+5:base_index+7], byteorder='little', signed=False)
+            imag = int.from_bytes(raw_data[base_index+7:base_index+9], byteorder='little', signed=False)
+            sweep.append({
+                'freq': freq, 
+                'real': real, 
+                'imag': imag
+            })
 
 print('Connecting...')
 async def run(ADDRESS, loop):
