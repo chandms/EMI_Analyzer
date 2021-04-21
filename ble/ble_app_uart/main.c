@@ -49,63 +49,64 @@
  */
 
 
-#include <stdint.h>
-#include <string.h>
-#include "nordic_common.h"
-#include "nrf.h"
-#include "ble_hci.h"
-#include "ble_advdata.h"
-#include "ble_advertising.h"
-#include "ble_conn_params.h"
-#include "nrf_sdh.h"
-#include "nrf_sdh_soc.h"
-#include "nrf_sdh_ble.h"
-#include "nrf_ble_gatt.h"
-#include "nrf_ble_qwr.h"
-#include "app_timer.h"
-#include "ble_nus.h"
-#include "app_uart.h"
-#include "app_util_platform.h"
-#include "bsp_btn_ble.h"
-#include "nrf_pwr_mgmt.h"
-#include "nrf_delay.h"
+//#include <stdint.h>
+//#include <string.h>
+//#include "nordic_common.h"
+//#include "nrf.h"
+//#include "ble_hci.h"
+//#include "ble_advdata.h"
+//#include "ble_advertising.h"
+//#include "ble_conn_params.h"
+//#include "nrf_sdh.h"
+//#include "nrf_sdh_soc.h"
+//#include "nrf_sdh_ble.h"
+//#include "nrf_ble_gatt.h"
+//#include "nrf_ble_qwr.h"
+//#include "app_timer.h"
+//#include "ble_nus.h"
+//#include "app_uart.h"
+//#include "app_util_platform.h"
+//#include "bsp_btn_ble.h"
+//#include "nrf_pwr_mgmt.h"
+//#include "nrf_delay.h"
 
-#if defined (UART_PRESENT)
-#include "nrf_uart.h"
-#endif
-#if defined (UARTE_PRESENT)
-#include "nrf_uarte.h"
-#endif
+//#if defined (UART_PRESENT)
+//#include "nrf_uart.h"
+//#endif
+//#if defined (UARTE_PRESENT)
+//#include "nrf_uarte.h"
+//#endif
 
-#include "nrf_log.h"
-#include "nrf_log_ctrl.h"
-#include "nrf_log_default_backends.h"
+//#include "nrf_log.h"
+//#include "nrf_log_ctrl.h"
+//#include "nrf_log_default_backends.h"
 
 #include "sweep.h"
+#include "ble_sweep.h"
 
-#define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
+//#define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
-#define DEVICE_NAME                     "ble-dev"                               		/**< Name of device. Will be included in the advertising data. */
-#define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
+//#define DEVICE_NAME                     "ble-dev"                               		/**< Name of device. Will be included in the advertising data. */
+//#define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
-#define APP_BLE_OBSERVER_PRIO           3                                           /**< Application's BLE observer priority. You shouldn't need to modify this value. */
+//#define APP_BLE_OBSERVER_PRIO           3                                           /**< Application's BLE observer priority. You shouldn't need to modify this value. */
 
-#define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
+//#define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 
-#define APP_ADV_DURATION                18000                                       /**< The advertising duration (180 seconds) in units of 10 milliseconds. */
+//#define APP_ADV_DURATION                18000                                       /**< The advertising duration (180 seconds) in units of 10 milliseconds. */
 
-#define MIN_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
-#define MAX_CONN_INTERVAL               MSEC_TO_UNITS(75, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
-#define SLAVE_LATENCY                   0                                           /**< Slave latency. */
-#define CONN_SUP_TIMEOUT                MSEC_TO_UNITS(4000, UNIT_10_MS)             /**< Connection supervisory timeout (4 seconds), Supervision Timeout uses 10 ms units. */
-#define FIRST_CONN_PARAMS_UPDATE_DELAY  APP_TIMER_TICKS(5000)                       /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
-#define NEXT_CONN_PARAMS_UPDATE_DELAY   APP_TIMER_TICKS(30000)                      /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
-#define MAX_CONN_PARAMS_UPDATE_COUNT    3                                           /**< Number of attempts before giving up the connection parameter negotiation. */
+//#define MIN_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
+//#define MAX_CONN_INTERVAL               MSEC_TO_UNITS(75, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
+//#define SLAVE_LATENCY                   0                                           /**< Slave latency. */
+//#define CONN_SUP_TIMEOUT                MSEC_TO_UNITS(4000, UNIT_10_MS)             /**< Connection supervisory timeout (4 seconds), Supervision Timeout uses 10 ms units. */
+//#define FIRST_CONN_PARAMS_UPDATE_DELAY  APP_TIMER_TICKS(5000)                       /**< Time from initiating event (connect or start of notification) to first time sd_ble_gap_conn_param_update is called (5 seconds). */
+//#define NEXT_CONN_PARAMS_UPDATE_DELAY   APP_TIMER_TICKS(30000)                      /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
+//#define MAX_CONN_PARAMS_UPDATE_COUNT    3                                           /**< Number of attempts before giving up the connection parameter negotiation. */
 
-#define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
+//#define DEAD_BEEF                       0xDEADBEEF                                  /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-#define UART_TX_BUF_SIZE                256                                         /**< UART TX buffer size. */
-#define UART_RX_BUF_SIZE                256                                         /**< UART RX buffer size. */
+//#define UART_TX_BUF_SIZE                256                                         /**< UART TX buffer size. */
+//#define UART_RX_BUF_SIZE                256                                         /**< UART RX buffer size. */
 
 
 BLE_NUS_DEF(m_nus, NRF_SDH_BLE_TOTAL_LINK_COUNT);                                   /**< BLE NUS service instance. */
@@ -120,6 +121,75 @@ static ble_uuid_t m_adv_uuids[]          =                                      
     {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}
 };
 
+static MetaData meta_data = {
+	.time = 10, .temp = 25, .numPoints = 1000
+};
+
+void send_package_ble(uint8_t *package, uint16_t package_size)
+{
+		uint32_t err_code;
+		do
+		{
+				err_code = ble_nus_data_send(&m_nus, package, &package_size, m_conn_handle);
+				if ((err_code != NRF_ERROR_INVALID_STATE) &&
+						(err_code != NRF_ERROR_RESOURCES) &&
+						(err_code != NRF_ERROR_NOT_FOUND))
+				{
+						APP_ERROR_CHECK(err_code);
+				}
+		} while (err_code == NRF_ERROR_RESOURCES);
+}
+
+void send_meta_data_ble(MetaData *meta_data){
+	
+	NRF_LOG_INFO("Sending metadata.");
+	static uint8_t buff[11];
+	static uint8_t *ptr; 
+	uint8_t i = 1;
+	buff[0] = 0;
+	ptr = (uint8_t *)&meta_data->numPoints;
+	for (; i < 5; i++) {
+		buff[i] = *ptr;
+		ptr++;
+	}
+	ptr = (uint8_t *)&meta_data->time;
+	for (; i < 9; i++) {
+		buff[i] = *ptr;
+		ptr++;
+	}
+	ptr = (uint8_t *)&meta_data->temp;
+	for (; i < 11; i++) {
+		buff[i] = *ptr;
+		ptr++;
+	}
+	
+	send_package_ble(buff, (uint16_t)sizeof(buff));
+}
+
+void send_sweep_ble(uint32_t *freq, uint16_t *real , uint16_t *imag){
+	
+	static uint8_t buff[9];
+	static uint8_t *ptr; 
+	uint8_t i = 1;
+	buff[0] = 1;
+	ptr = (uint8_t *)freq;
+	for (; i < 5; i++) {
+		buff[i] = *ptr;
+		ptr++;
+	}
+	ptr = (uint8_t *)real;
+	for (; i < 7; i++) {
+		buff[i] = *ptr;
+		ptr++;
+	}
+	ptr = (uint8_t *)imag;
+	for (; i < 9; i++) {
+		buff[i] = *ptr;
+		ptr++;
+	}
+	
+	send_package_ble(buff, (uint16_t)sizeof(buff));
+}
 
 /**@brief Function for assert macro callback.
  *
@@ -475,74 +545,6 @@ void gatt_init(void)
 }
 
 
-
-
-void send_package_ble(uint8_t *package, uint16_t package_size)
-{
-		uint32_t err_code;
-		do
-		{
-				err_code = ble_nus_data_send(&m_nus, package, &package_size, m_conn_handle);
-				if ((err_code != NRF_ERROR_INVALID_STATE) &&
-						(err_code != NRF_ERROR_RESOURCES) &&
-						(err_code != NRF_ERROR_NOT_FOUND))
-				{
-						APP_ERROR_CHECK(err_code);
-				}
-		} while (err_code == NRF_ERROR_RESOURCES);
-}
-
-void send_meta_data_ble(MetaData *meta_data){
-	
-	NRF_LOG_INFO("Sending metadata.");
-	static uint8_t buff[11];
-	static uint8_t *ptr; 
-	uint8_t i = 1;
-	buff[0] = 1;
-	ptr = (uint8_t *)&meta_data->numPoints;
-	for (; i < 5; i++) {
-		buff[i] = *ptr;
-		ptr++;
-	}
-	ptr = (uint8_t *)&meta_data->time;
-	for (; i < 9; i++) {
-		buff[i] = *ptr;
-		ptr++;
-	}
-	ptr = (uint8_t *)&meta_data->temp;
-	for (; i < 11; i++) {
-		buff[i] = *ptr;
-		ptr++;
-	}
-	
-	send_package_ble(buff, (uint16_t)sizeof(buff));
-}
-
-void send_sweep_ble(uint32_t *freq, uint16_t *real , uint16_t *imag){
-	
-	static uint8_t buff[9];
-	static uint8_t *ptr; 
-	uint8_t i = 1;
-	buff[0] = 0;
-	ptr = (uint8_t *)freq;
-	for (; i < 5; i++) {
-		buff[i] = *ptr;
-		ptr++;
-	}
-	ptr = (uint8_t *)real;
-	for (; i < 7; i++) {
-		buff[i] = *ptr;
-		ptr++;
-	}
-	ptr = (uint8_t *)imag;
-	for (; i < 9; i++) {
-		buff[i] = *ptr;
-		ptr++;
-	}
-	
-	send_package_ble(buff, (uint16_t)sizeof(buff));
-}
-
 /**@brief Function for handling events from the BSP module.
  *
  * @param[in]   event   Event generated by button press.
@@ -550,7 +552,8 @@ void send_sweep_ble(uint32_t *freq, uint16_t *real , uint16_t *imag){
 void bsp_event_handler(bsp_event_t event)
 {
     uint32_t err_code;
-		static uint16_t data_size, data_sent, package_size; 
+		static uint32_t package_sent = 0;
+		static uint16_t data_size, data_sent, package_size, current_size; 
 		static uint8_t n_package;
 		static uint8_t data_array[] = {0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x61, 0x20, 
 			0x76, 0x65, 0x72, 0x79, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 
@@ -565,11 +568,10 @@ void bsp_event_handler(bsp_event_t event)
 			0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6C, 0x6F, 0x6E, 0x67, 0x20, 0x6D, 0x65, 0x73, 0x73, 0x61, 
 			0x67, 0x65, 0x2E};
 		static uint8_t package[BLE_NUS_MAX_DATA_LEN];
+		static uint8_t *ptr;
+		static uint32_t freq;
+		static uint16_t real, imag;
 			
-		static MetaData meta_data = {
-			.time = 10, .temp = 25, .numPoints = 10
-		};
-		
     switch (event)
     {
         case BSP_EVENT_SLEEP:
@@ -634,17 +636,56 @@ void bsp_event_handler(bsp_event_t event)
 					NRF_LOG_INFO("Transfering dummy sweep file.");
 					send_meta_data_ble(&meta_data);	
 					NRF_LOG_INFO("The sweep has %d frequency data", meta_data.numPoints);
-					uint32_t freq;
-					uint16_t real, imag;
-					for (uint32_t i=0; i < meta_data.numPoints; i++) 
+					 
+					
+//					while (package_sent < meta_data.numPoints) 
+					if (package_sent < meta_data.numPoints) 
+//					while (package_sent < 60)
 					{
-						nrf_delay_ms(1);
-						freq = 1156;
-						real = 1656;
-						imag = 1651;
-						send_sweep_ble(&freq, &real, &imag);
-
-					}
+						package[0] = 0;
+						for (package_size=1; package_size+8 < BLE_NUS_MAX_DATA_LEN;)
+						{
+							freq = package_sent+1;
+							real = package_sent+1;
+							imag = package_sent+1;
+							ptr = (uint8_t *)&freq;
+							for (current_size=package_size; package_size < current_size+4; package_size++) {
+								package[package_size] = *ptr;
+								ptr++;
+							}
+							ptr = (uint8_t *)&real;
+							for (current_size=package_size; package_size < current_size+2; package_size++) {
+								package[package_size] = *ptr;
+								ptr++;
+							}
+							ptr = (uint8_t *)&imag;
+							for (current_size=package_size; package_size < current_size+2; package_size++) {
+								package[package_size] = *ptr;
+								ptr++;
+							}
+							package[0]++;
+							package_sent++;
+//							NRF_LOG_INFO("Packed frequency  #%d.", package_sent);
+//							NRF_LOG_INFO("Package size  %d.", package_size);
+						}
+						
+						
+//						send_package_ble(package, package_size);
+//						nrf_delay_ms(500);
+						uint32_t err_code;
+						do
+						{
+								err_code = ble_nus_data_send(&m_nus, package, &package_size, m_conn_handle);
+								if ((err_code != NRF_ERROR_INVALID_STATE) &&
+										(err_code != NRF_ERROR_RESOURCES) &&
+										(err_code != NRF_ERROR_NOT_FOUND))
+								{
+										APP_ERROR_CHECK(err_code);
+								}
+						} while (err_code == NRF_ERROR_RESOURCES);
+						NRF_LOG_INFO("Send frequency upto #%d.", package_sent);
+						
+					}			
 					NRF_LOG_INFO("Transfered dummy sweep file.");
 					break;
 
