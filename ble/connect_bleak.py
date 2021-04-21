@@ -1,3 +1,6 @@
+import datetime
+from pathlib import Path
+import pandas as pd
 import asyncio
 import array
 from bleak import BleakScanner
@@ -76,4 +79,9 @@ loop = asyncio.get_event_loop()
 loop.run_until_complete(run(ADDRESS, loop))
 print(meta_data)
 print(f'Got {len(sweep)} data')
-print(sweep)
+sweep_df = pd.DataFrame.from_dict(sweep)
+print(sweep_df)
+path = Path('/home/pi/Desktop/EMI/sweeps')
+filename = path / f'{datetime.datetime.now().replace(microsecond=0).isoformat()}.csv'
+sweep_df.to_csv(filename, index=False)
+print(f'Save to {filename}')
