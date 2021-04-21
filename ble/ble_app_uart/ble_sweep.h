@@ -67,6 +67,10 @@ Description: A header file contains fucntions and parameters for transfering swe
 
 #endif
 
+void ble_sweep_init(void);
 
+void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name);
 
+void uart_event_handle(app_uart_evt_t * p_event);
 
+void bsp_event_handler(bsp_event_t event);
