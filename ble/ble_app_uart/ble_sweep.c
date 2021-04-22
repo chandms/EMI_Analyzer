@@ -28,12 +28,12 @@ static uint8_t package[BLE_NUS_MAX_DATA_LEN];
 static MetaData meta_data = {
 	.time = 10, 
 	.temp = 25, 
-	.numPoints = 1000
+	.numPoints = 300
 };
 
 static PackageInfo package_info; 
 
-PackageInfo pack_sweep_data(uint8_t *package, uint8_t start_freq)
+PackageInfo pack_sweep_data(uint8_t *package, uint16_t start_freq)
 {
 	PackageInfo package_info = {
 		.ptr = package,
@@ -257,14 +257,26 @@ void bsp_event_handler(bsp_event_t event)
 					
 //					NRF_LOG_INFO("Transfered dummy sweep file.");
 //					NRF_LOG_INFO("Package first address = %d", &package);
+//					package_info = pack_sweep_data(package, package_sent+1);
+//					NRF_LOG_INFO("Package pointer = %d", package_info.ptr);
+//					NRF_LOG_INFO("Package first value = %d", *package_info.ptr);
+//					NRF_LOG_INFO("Package first frequency = %d", package_info.start_freq);
+//					NRF_LOG_INFO("Package last frequency = %d", package_info.stop_freq);
+//					NRF_LOG_INFO("Package size = %d", package_info.package_size);
+
 					package_info = pack_sweep_data(package, package_sent+1);
-					NRF_LOG_INFO("Package pointer = %d", package_info.ptr);
-					NRF_LOG_INFO("Package first value = %d", *package_info.ptr);
-					NRF_LOG_INFO("Package first frequency = %d", package_info.start_freq);
-					NRF_LOG_INFO("Package last frequency = %d", package_info.stop_freq);
-					NRF_LOG_INFO("Package size = %d", package_info.package_size);
-					package_sent = package_info.stop_freq;
 					send_package_ble(package_info.ptr, package_info.package_size);
+					package_sent = package_info.stop_freq;
+					
+					package_info = pack_sweep_data(package, package_sent+1);
+					send_package_ble(package_info.ptr, package_info.package_size);
+					package_sent = package_info.stop_freq;
+					
+					package_info = pack_sweep_data(package, package_sent+1);
+					send_package_ble(package_info.ptr, package_info.package_size);
+					package_sent = package_info.stop_freq;
+					
+					
 					break;
 
         default:

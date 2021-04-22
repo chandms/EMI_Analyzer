@@ -44,4 +44,5 @@ typedef struct package_info
 void ble_sweep_init(void);
 void send_package_ble(uint8_t *package, uint16_t package_size);
 void send_meta_data_ble(MetaData *meta_data);
+PackageInfo pack_sweep_data(uint8_t *package, uint16_t start_freq);
 
