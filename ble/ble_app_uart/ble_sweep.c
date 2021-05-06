@@ -5,8 +5,6 @@ Date: 4/20/2021
 Description: A file contains fucntions and parameters for transfering sweep file via ble.
 */
 
-
-
 #include "ble_sweep.h"
 
 BLE_NUS_DEF(m_nus, NRF_SDH_BLE_TOTAL_LINK_COUNT);                                   /**< BLE NUS service instance. */
@@ -80,20 +78,6 @@ PackageInfo pack_sweep_data(uint8_t *package, uint16_t start_freq)
 	return package_info;
 }
 
-void send_package_ble(uint8_t *package, uint16_t package_size)
-{
-		uint32_t err_code;
-		do
-		{
-				err_code = ble_nus_data_send(&m_nus, package, &package_size, m_conn_handle);
-				if ((err_code != NRF_ERROR_INVALID_STATE) &&
-						(err_code != NRF_ERROR_RESOURCES) &&
-						(err_code != NRF_ERROR_NOT_FOUND))
-				{
-						APP_ERROR_CHECK(err_code);
-				}
-		} while (err_code == NRF_ERROR_RESOURCES);
-}
 
 void send_meta_data_ble(MetaData *meta_data)
 {
@@ -121,7 +105,6 @@ void send_meta_data_ble(MetaData *meta_data)
 	
 	send_package_ble(buff, (uint16_t)sizeof(buff));
 }
-
 
 /**@brief Function for putting the chip into sleep mode.
  *
@@ -173,97 +156,13 @@ void bsp_event_handler(bsp_event_t event)
                 }
             }
             break;
-				/*
-				case BSP_EVENT_KEY_3:
-					NRF_LOG_INFO("Button is pressed.");
-				
-					data_sent = 0;
-					data_size = sizeof(data_array);
-					NRF_LOG_INFO("Ready to send %d byte(s) data over BLE NUS", data_size);
-					n_package = data_size / BLE_NUS_MAX_DATA_LEN;
-					if (data_size % BLE_NUS_MAX_DATA_LEN > 0) 
-					{
-							n_package++;
-					}
-					NRF_LOG_INFO("Break data into %d package(s)", n_package);
-				
-					for (uint8_t i=0; i < n_package; i++)
-					{
-						if (data_sent + BLE_NUS_MAX_DATA_LEN <= data_size) 
-						{
-								package_size = BLE_NUS_MAX_DATA_LEN;
-						}
-						else 
-						{
-								package_size = data_size - data_sent;
-						}
-						for (uint16_t j=0; j < package_size; j++) 
-						{
-								package[j] = data_array[data_sent];
-								data_sent++;
-						}
-						NRF_LOG_HEXDUMP_DEBUG(package, package_size);
-						NRF_LOG_INFO("Sending package #%d size %d byte(s)", i+1, package_size);
-						send_package_ble(package, package_size);
-					}		
-					
-					break;
-				*/
-					
+									
 				case BSP_EVENT_KEY_2:
 					NRF_LOG_INFO("Transfering dummy sweep file.");
 					send_meta_data_ble(&meta_data);	
 					NRF_LOG_INFO("The sweep has %d frequency data", meta_data.numPoints);
 						
 				
-				/*	
-//					while (package_sent < meta_data.numPoints) 
-					if (package_sent < meta_data.numPoints) 
-//					while (package_sent < 60)
-					{
-						package[0] = 0;
-						for (package_size=1; package_size+8 < BLE_NUS_MAX_DATA_LEN;)
-						{
-							freq = package_sent+1;
-							real = package_sent+1;
-							imag = package_sent+1;
-							ptr = (uint8_t *)&freq;
-							for (current_size=package_size; package_size < current_size+4; package_size++) {
-								package[package_size] = *ptr;
-								ptr++;
-							}
-							ptr = (uint8_t *)&real;
-							for (current_size=package_size; package_size < current_size+2; package_size++) {
-								package[package_size] = *ptr;
-								ptr++;
-							}
-							ptr = (uint8_t *)&imag;
-							for (current_size=package_size; package_size < current_size+2; package_size++) {
-								package[package_size] = *ptr;
-								ptr++;
-							}
-							package[0]++;
-							package_sent++;
-//							NRF_LOG_INFO("Packed frequency  #%d.", package_sent);
-//							NRF_LOG_INFO("Package size  %d.", package_size);
-						}
-						
-						
-						send_package_ble(package, package_size);
-//						nrf_delay_ms(500);
-						NRF_LOG_INFO("Send frequency upto #%d.", package_sent);
-						
-					}*/			
-					
-//					NRF_LOG_INFO("Transfered dummy sweep file.");
-//					NRF_LOG_INFO("Package first address = %d", &package);
-//					package_info = pack_sweep_data(package, package_sent+1);
-//					NRF_LOG_INFO("Package pointer = %d", package_info.ptr);
-//					NRF_LOG_INFO("Package first value = %d", *package_info.ptr);
-//					NRF_LOG_INFO("Package first frequency = %d", package_info.start_freq);
-//					NRF_LOG_INFO("Package last frequency = %d", package_info.stop_freq);
-//					NRF_LOG_INFO("Package size = %d", package_info.package_size);
-
 					package_info = pack_sweep_data(package, package_sent+1);
 					send_package_ble(package_info.ptr, package_info.package_size);
 					package_sent = package_info.stop_freq;
@@ -283,6 +182,24 @@ void bsp_event_handler(bsp_event_t event)
             break;
     }
 }
+
+void send_package_ble(uint8_t *package, uint16_t package_size)
+{
+		uint32_t err_code;
+		do
+		{
+				err_code = ble_nus_data_send(&m_nus, package, &package_size, m_conn_handle);
+				if ((err_code != NRF_ERROR_INVALID_STATE) &&
+						(err_code != NRF_ERROR_RESOURCES) &&
+						(err_code != NRF_ERROR_NOT_FOUND))
+				{
+						APP_ERROR_CHECK(err_code);
+				}
+		} while (err_code == NRF_ERROR_RESOURCES);
+}
+
+
+
 
 /**@brief Function for assert macro callback.
  *
@@ -438,10 +355,6 @@ static void power_management_init(void)
 }
 
 
-
-
-
-
 static void on_conn_params_evt(ble_conn_params_evt_t * p_evt)
 {
     uint32_t err_code;
@@ -462,7 +375,6 @@ static void conn_params_error_handler(uint32_t nrf_error)
 {
     APP_ERROR_HANDLER(nrf_error);
 }
-
 
 
 /**@brief Function for handling advertising events.
@@ -775,8 +687,6 @@ static void conn_params_init(void)
 }
 
 
-
-
 /**@brief Function for starting advertising.
  */
 static void advertising_start(void)
@@ -787,12 +697,13 @@ static void advertising_start(void)
 
 void ble_sweep_init(void)
 {
-	bool erase_bonds;
 	
+	bool erase_bonds;
 	uart_init();
 	log_init();
-	timers_init();
 	buttons_leds_init(&erase_bonds);
+	
+	timers_init();
 	power_management_init();
 	ble_stack_init();
 	gap_params_init();
@@ -805,5 +716,3 @@ void ble_sweep_init(void)
 	advertising_start();
 	
 }
-
-

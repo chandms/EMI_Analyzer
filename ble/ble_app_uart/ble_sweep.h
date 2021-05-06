@@ -5,13 +5,45 @@ Date: 4/20/2021
 Description: A header file contains fucntions and parameters for transfering sweep file via ble.
 */
 
+#include <stdint.h>
+#include <string.h>
+#include "nordic_common.h"
+#include "nrf.h"
+#include "ble_hci.h"
+#include "ble_advdata.h"
+#include "ble_advertising.h"
+#include "ble_conn_params.h"
+#include "nrf_sdh.h"
+#include "nrf_sdh_soc.h"
+#include "nrf_sdh_ble.h"
+#include "nrf_ble_gatt.h"
+#include "nrf_ble_qwr.h"
+#include "app_timer.h"
+#include "ble_nus.h"
+#include "app_uart.h"
+#include "app_util_platform.h"
+#include "bsp_btn_ble.h"
+#include "nrf_pwr_mgmt.h"
+#include "nrf_delay.h"
+
+
+#if defined (UART_PRESENT)
+#include "nrf_uart.h"
+#endif
+#if defined (UARTE_PRESENT)
+#include "nrf_uarte.h"
+#endif
+
+#include "nrf_log.h"
+#include "nrf_log_ctrl.h"
+#include "nrf_log_default_backends.h"
+
 #include "sweep.h"
-#include "ble_sweep_init.h"
 
 
 #define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
-#define DEVICE_NAME                     "ble-dev"                               		/**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "EMI_BLE_DEV"                               /**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define APP_BLE_OBSERVER_PRIO           3                                           /**< Application's BLE observer priority. You shouldn't need to modify this value. */
@@ -42,7 +74,7 @@ typedef struct package_info
 } PackageInfo;
 
 void ble_sweep_init(void);
-void send_package_ble(uint8_t *package, uint16_t package_size);
 void send_meta_data_ble(MetaData *meta_data);
+void send_package_ble(uint8_t *package, uint16_t package_size);
 PackageInfo pack_sweep_data(uint8_t *package, uint16_t start_freq);
 
