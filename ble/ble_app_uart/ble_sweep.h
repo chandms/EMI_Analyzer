@@ -65,6 +65,10 @@ Description: A header file contains fucntions and parameters for transfering swe
 #define UART_TX_BUF_SIZE                256                                         /**< UART TX buffer size. */
 #define UART_RX_BUF_SIZE                256                                         /**< UART RX buffer size. */
 
+#ifdef BLE_DEV
+#define DUMMY_SWEEP_SIZE                500                                        
+#endif
+
 typedef struct package_info
 {
 	uint8_t *ptr;
@@ -76,5 +80,5 @@ typedef struct package_info
 void ble_sweep_init(void);
 void send_meta_data_ble(MetaData *meta_data);
 void send_package_ble(uint8_t *package, uint16_t package_size);
-PackageInfo pack_sweep_data(uint8_t *package, uint16_t start_freq);
+PackageInfo pack_sweep_data(uint16_t start_freq, uint32_t *freq, uint16_t *real, uint16_t *imag);
 

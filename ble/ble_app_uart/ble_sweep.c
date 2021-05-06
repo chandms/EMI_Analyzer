@@ -19,19 +19,30 @@ static ble_uuid_t m_adv_uuids[]          =                                      
     {BLE_UUID_NUS_SERVICE, NUS_SERVICE_UUID_TYPE}
 };
 
+
+
+#ifdef BLE_DEV
 static uint32_t package_sent = 0;
-static uint8_t package[BLE_NUS_MAX_DATA_LEN];
+static uint32_t freq[DUMMY_SWEEP_SIZE];
+static uint16_t real[DUMMY_SWEEP_SIZE], imag[DUMMY_SWEEP_SIZE];
+#endif
 
 
 static MetaData meta_data = {
 	.time = 10, 
 	.temp = 25, 
-	.numPoints = 300
+	.numPoints = DUMMY_SWEEP_SIZE
 };
+
+
+
+static uint8_t package[BLE_NUS_MAX_DATA_LEN];
+
+
 
 static PackageInfo package_info; 
 
-PackageInfo pack_sweep_data(uint8_t *package, uint16_t start_freq)
+PackageInfo pack_sweep_data(uint16_t start_freq, uint32_t *freq, uint16_t *real, uint16_t *imag)
 {
 	PackageInfo package_info = {
 		.ptr = package,
@@ -41,36 +52,39 @@ PackageInfo pack_sweep_data(uint8_t *package, uint16_t start_freq)
 	};
 	
 	static uint16_t current_size; 
-	static uint8_t *ptr;
-	static uint32_t freq;
-	static uint16_t real, imag;
+	static uint8_t *data_ptr, *package_ptr;
 	
-	*package = 0;
-	package++;
+	package_ptr = package_info.ptr;
+	package_ptr++;
 	for (package_info.package_size=1; package_info.package_size+8 < BLE_NUS_MAX_DATA_LEN;)
 	{
-		freq = package_info.stop_freq;
-		real = package_info.stop_freq;
-		imag = package_info.stop_freq;
-		ptr = (uint8_t *)&freq;
+		data_ptr = (uint8_t *)freq;
 		for (current_size=package_info.package_size; package_info.package_size < current_size+4; package_info.package_size++) {
-			*package = *ptr;
-			ptr++;
-			package++;
-		}
-		ptr = (uint8_t *)&real;
-		for (current_size=package_info.package_size; package_info.package_size < current_size+2; package_info.package_size++) {
-			*package = *ptr;
-			ptr++;
-			package++;
-		}
-		ptr = (uint8_t *)&imag;
-		for (current_size=package_info.package_size; package_info.package_size < current_size+2; package_info.package_size++) {
-			*package = *ptr;
-			ptr++;
-			package++;
+			*package_ptr = *data_ptr;
+			data_ptr++;
+			package_ptr++;
 		}
 		
+		
+		data_ptr = (uint8_t *)real;
+		for (current_size=package_info.package_size; package_info.package_size < current_size+2; package_info.package_size++) {
+			*package_ptr = *data_ptr;
+			data_ptr++;
+			package_ptr++;
+		}
+		
+		
+		data_ptr = (uint8_t *)imag;
+		for (current_size=package_info.package_size; package_info.package_size < current_size+2; package_info.package_size++) {
+			*package_ptr = *data_ptr;
+			data_ptr++;
+			package_ptr++;
+		}
+		
+	
+		freq++;
+		real++;
+		imag++;
 		package_info.stop_freq++;
 	}
 	*package_info.ptr = package_info.stop_freq - package_info.start_freq;
@@ -132,6 +146,8 @@ void bsp_event_handler(bsp_event_t event)
 {
     uint32_t err_code;
 		
+
+		
     switch (event)
     {
         case BSP_EVENT_SLEEP:
@@ -156,22 +172,21 @@ void bsp_event_handler(bsp_event_t event)
                 }
             }
             break;
-									
+				
 				case BSP_EVENT_KEY_2:
 					NRF_LOG_INFO("Transfering dummy sweep file.");
 					send_meta_data_ble(&meta_data);	
 					NRF_LOG_INFO("The sweep has %d frequency data", meta_data.numPoints);
-						
-				
-					package_info = pack_sweep_data(package, package_sent+1);
+									
+					package_info = pack_sweep_data(package_sent+1, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
 					send_package_ble(package_info.ptr, package_info.package_size);
 					package_sent = package_info.stop_freq;
 					
-					package_info = pack_sweep_data(package, package_sent+1);
+					package_info = pack_sweep_data(package_sent+1, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
 					send_package_ble(package_info.ptr, package_info.package_size);
 					package_sent = package_info.stop_freq;
 					
-					package_info = pack_sweep_data(package, package_sent+1);
+					package_info = pack_sweep_data(package_sent+1, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
 					send_package_ble(package_info.ptr, package_info.package_size);
 					package_sent = package_info.stop_freq;
 					
@@ -697,6 +712,17 @@ static void advertising_start(void)
 
 void ble_sweep_init(void)
 {
+	
+	
+	uint16_t i;
+	for (i=0; i < meta_data.numPoints; i++)
+	{
+			freq[i] = i+1;
+			real[i] = i+1;
+			imag[i] = i+1;
+	}
+	NRF_LOG_INFO("Created dummy sweep file.");
+	
 	
 	bool erase_bonds;
 	uart_init();
