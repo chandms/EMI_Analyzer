@@ -7,7 +7,10 @@ from bleak import BleakScanner
 from bleak import discover
 from bleak import BleakClient
 
-ADDRESS = 'C6:3F:7F:8E:A7:D1'
+# Tam DK
+ADDRESS = 'C6:3F:7F:8E:A7:D1' 
+# Henry DK
+# ADDRESS = 'F2:F3:78:24:DF:44'
 UART_NORDIC = '6E400001-B5A3-F393-E0A9-E50E24DCCA9E'
 UUID_NORDIC_RX = '6E400003-B5A3-F393-E0A9-E50E24DCCA9E'
 UUID_NORDIC_TX = '6E400002-B5A3-F393-E0A9-E50E24DCCA9E'
@@ -70,7 +73,7 @@ async def run(ADDRESS, loop):
         #   await client.write_gatt_char(UUID_NORDIC_TX, bytearray(c[0:10]), True)
         #   c = c[20:]
         print('Waiting for data')
-        await asyncio.sleep(5.0, loop=loop) # wait for a response
+        await asyncio.sleep(10.0, loop=loop) # wait for a response
         print('Done!')
 
 meta_data = MetaData()
