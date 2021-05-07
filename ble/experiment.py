@@ -48,6 +48,8 @@ def uart_data_received(sender, raw_data):
 def connection_command():
     print(f'Select following commands')
     print(f'{"q": >2}: Terminate connection')
+    print(f'{"m": >2}: Get metadata')
+    print(f'{"g": >2}: Get sweep')
     command = input()
     return command
 
@@ -63,7 +65,13 @@ async def connect(device):
         await connection.start_notify(UUID_NORDIC_RX, uart_data_received)
         command = connection_command()
         while(command != 'q'):
-            await connection.write_gatt_char(UUID_NORDIC_TX, bytearray('message', 'utf-8'), True)
+            if command == 'm':
+                await connection.write_gatt_char(UUID_NORDIC_TX, bytearray('0', 'utf-8'), True)
+                print(f'There are {meta_data.n_freq} frequencies')
+            elif command == 'g':
+                while len(sweep) < meta_data.n_freq:
+                    await connection.write_gatt_char(UUID_NORDIC_TX, bytearray('1', 'utf-8'), True)
+                    await asyncio.sleep(0.1)
             command = connection_command()
         print('Disconnecting ...')
 
