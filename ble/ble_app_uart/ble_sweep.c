@@ -53,29 +53,33 @@ uint8_t check_connection(void)
 
 void ble_command_handler(void)
 {
-	switch (ble_command)
+	if (check_connection() == BLE_CON_ALIVE)
 	{
-		case 48:
-			send_meta_data_ble(&meta_data);
-			package_sent = 0;
-			break;
-		
-		case 49:
-			package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
-			send_package_ble(package_info.ptr, package_info.package_size);
-			package_sent = package_info.stop_freq;
+		switch (ble_command)
+		{
+			case 48:
+				send_meta_data_ble(&meta_data);
+				package_sent = 0;
+				break;
 			
-			package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
-			send_package_ble(package_info.ptr, package_info.package_size);
-			package_sent = package_info.stop_freq;
-		
-			package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
-			send_package_ble(package_info.ptr, package_info.package_size);
-			package_sent = package_info.stop_freq;
-		
-			NRF_LOG_INFO("Sent frequency upto #%d", package_sent);
-			break;
+			case 49:
+				package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+				send_package_ble(package_info.ptr, package_info.package_size);
+				package_sent = package_info.stop_freq;
+				
+				package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+				send_package_ble(package_info.ptr, package_info.package_size);
+				package_sent = package_info.stop_freq;
+			
+				package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+				send_package_ble(package_info.ptr, package_info.package_size);
+				package_sent = package_info.stop_freq;
+			
+				NRF_LOG_INFO("Sent frequency upto #%d", package_sent);
+				break;
+		}
 	}
+	
 }
 
 PackageInfo pack_sweep_data(uint16_t start_freq, MetaData *meta_data, uint32_t *freq, uint16_t *real, uint16_t *imag)
