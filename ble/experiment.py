@@ -2,15 +2,9 @@ import datetime
 from pathlib import Path
 import pandas as pd
 import asyncio
-import array
 from bleak import BleakScanner
-from bleak import discover
 from bleak import BleakClient
 
-# Tam DK
-ADDRESS = 'C6:3F:7F:8E:A7:D1' 
-# Henry DK
-# ADDRESS = 'F2:F3:78:24:DF:44'
 UART_NORDIC = '6E400001-B5A3-F393-E0A9-E50E24DCCA9E'
 UUID_NORDIC_RX = '6E400003-B5A3-F393-E0A9-E50E24DCCA9E'
 UUID_NORDIC_TX = '6E400002-B5A3-F393-E0A9-E50E24DCCA9E'
@@ -25,15 +19,6 @@ class MetaData():
         return f'Number of frequency data = {self.n_freq} \n' \
                f'Time = {self.time} \n' \
                f'temperature = {self.temperature}'
-                
-
-# async def run():
-#     devices = await BleakScanner.discover()
-#     for d in devices:
-#         print(d)
-
-# loop = asyncio.get_event_loop()
-# loop.run_until_complete(run())
 
 def uart_data_received(sender, raw_data):
     # print(f'RX> ({len(raw_data)} Bytes) {raw_data.decode()}')
@@ -60,21 +45,43 @@ def uart_data_received(sender, raw_data):
                 'imag': imag
             })
 
-print('Connecting...')
-async def run(ADDRESS, loop):
-    async with BleakClient(ADDRESS, loop=loop) as client:
+def connection_command():
+    print(f'Select following commands')
+    print(f'{"q": >2}: Terminate connection')
+    command = input()
+    return command
+
+async def scan(time=5):
+    devices = await BleakScanner.discover(time)
+    return devices
+
+async def connect(device):
+    async with BleakClient(device) as connection:
+        while not connection.is_connected:
+            pass
         print('Connected')
-        await client.start_notify(UUID_NORDIC_RX, uart_data_received)
-        print('Writing command')
-        await client.write_gatt_char(UUID_NORDIC_TX, bytearray('Hello', 'utf-8'), True)
-        print('Waiting for data')
-        await asyncio.sleep(10.0, loop=loop) # wait for a response
-        print('Done!')
+        await connection.start_notify(UUID_NORDIC_RX, uart_data_received)
+        command = connection_command()
+        while(command != 'q'):
+            await connection.write_gatt_char(UUID_NORDIC_TX, bytearray('message', 'utf-8'), True)
+            command = connection_command()
+        print('Disconnecting ...')
+
+print('Scaning BLE devices ...')
+devices = asyncio.run(scan())
+print(f'Found {len(devices)} devices')
+print(f' # {"name":>20} {"RSSI":>8}')
+print('-'*40)
+for index, device in enumerate(devices):
+    print(f'{index+1:2} {device.name:>20} {device.rssi:>4} dBm')
+print('-'*40)
+selected = int(input('Select a BLE device: '))
+device = devices[selected-1]
+print(f'Connecting to {device.name} ({device.address}) ...')
 
 meta_data = MetaData()
 sweep = []
-loop = asyncio.get_event_loop()
-loop.run_until_complete(run(ADDRESS, loop))
+connection = asyncio.run(connect(device))
 print(meta_data)
 print(f'Got {len(sweep)} data')
 sweep_df = pd.DataFrame.from_dict(sweep)
