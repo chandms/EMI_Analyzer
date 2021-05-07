@@ -76,7 +76,7 @@ int main(void)
     // Enter main loop.
     for (;;)
     {
-        idle_state_handle();
+			idle_state_handle();
     }
 }
 

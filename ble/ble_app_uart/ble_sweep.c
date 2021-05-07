@@ -36,6 +36,47 @@ static MetaData meta_data = {
 static uint8_t package[BLE_NUS_MAX_DATA_LEN];
 static PackageInfo package_info; 
 static uint32_t package_sent = 0;
+static uint8_t ble_command;
+
+uint8_t check_connection(void)
+{
+	if (m_conn_handle == BLE_CONN_HANDLE_INVALID) 
+	{
+		return BLE_CON_DEAD;
+	}
+	else
+	{
+		return BLE_CON_ALIVE;
+	}
+			
+}
+
+void ble_command_handler(void)
+{
+	switch (ble_command)
+	{
+		case 48:
+			send_meta_data_ble(&meta_data);
+			package_sent = 0;
+			break;
+		
+		case 49:
+			package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+			send_package_ble(package_info.ptr, package_info.package_size);
+			package_sent = package_info.stop_freq;
+			
+			package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+			send_package_ble(package_info.ptr, package_info.package_size);
+			package_sent = package_info.stop_freq;
+		
+			package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+			send_package_ble(package_info.ptr, package_info.package_size);
+			package_sent = package_info.stop_freq;
+		
+			NRF_LOG_INFO("Sent frequency upto #%d", package_sent);
+			break;
+	}
+}
 
 PackageInfo pack_sweep_data(uint16_t start_freq, MetaData *meta_data, uint32_t *freq, uint16_t *real, uint16_t *imag)
 {
@@ -177,22 +218,27 @@ void bsp_event_handler(bsp_event_t event)
             break;
 				
 				case BSP_EVENT_KEY_2:
-					NRF_LOG_INFO("Transfering dummy sweep file.");
-					send_meta_data_ble(&meta_data);	
-					NRF_LOG_INFO("The sweep has %d frequency data", meta_data.numPoints);
-									
-					package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
-					send_package_ble(package_info.ptr, package_info.package_size);
-					package_sent = package_info.stop_freq;
 					
-					package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
-					send_package_ble(package_info.ptr, package_info.package_size);
-					package_sent = package_info.stop_freq;
 				
-					package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
-					send_package_ble(package_info.ptr, package_info.package_size);
-					package_sent = package_info.stop_freq;
+					if (check_connection() == BLE_CON_ALIVE)
+					{
+						NRF_LOG_INFO("Transfering dummy sweep file.");
+						send_meta_data_ble(&meta_data);	
+						NRF_LOG_INFO("The sweep has %d frequency data", meta_data.numPoints);
+						
+						package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+						send_package_ble(package_info.ptr, package_info.package_size);
+						package_sent = package_info.stop_freq;
+						
+						package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+						send_package_ble(package_info.ptr, package_info.package_size);
+						package_sent = package_info.stop_freq;
 					
+						package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+						send_package_ble(package_info.ptr, package_info.package_size);
+						package_sent = package_info.stop_freq;
+					}
+									
 					
 					break;
 
@@ -237,32 +283,11 @@ static void nus_data_handler(ble_nus_evt_t * p_evt)
 				
 //				NRF_LOG_INFO("Recieved %d bytes", p_evt->params.rx_data.length);
 //				NRF_LOG_INFO("Recieved: %d", (uint8_t)p_evt->params.rx_data.p_data[0]);
-				switch ((uint8_t)p_evt->params.rx_data.p_data[0])
-				{
-					case 48:
-						send_meta_data_ble(&meta_data);
-						package_sent = 0;
-						break;
-					
-					case 49:
-						package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
-						send_package_ble(package_info.ptr, package_info.package_size);
-						package_sent = package_info.stop_freq;
-						
-						package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
-						send_package_ble(package_info.ptr, package_info.package_size);
-						package_sent = package_info.stop_freq;
-					
-						package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
-						send_package_ble(package_info.ptr, package_info.package_size);
-						package_sent = package_info.stop_freq;
-					
-						NRF_LOG_INFO("Sent frequency upto #%d", package_sent);
-						break;
-				}
-
+				ble_command = (uint8_t)p_evt->params.rx_data.p_data[0];
 			
 #ifdef BLE_DEV
+			
+				ble_command_handler();
 			
 				uint32_t err_code;
         for (uint32_t i = 0; i < p_evt->params.rx_data.length; i++)
