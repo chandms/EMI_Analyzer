@@ -26,18 +26,18 @@ static uint32_t freq[DUMMY_SWEEP_SIZE];
 static uint16_t real[DUMMY_SWEEP_SIZE], imag[DUMMY_SWEEP_SIZE];
 #endif
 
-static MetaData meta_data = {
-	.time = 10, 
-	.temp = 25, 
-	.numPoints = DUMMY_SWEEP_SIZE
-};
-
-
+static MetaData meta_data;
+//static MetaData *meta_data_ptr;
+//static uint32_t *freq_ptr;
+//static uint16_t *real_ptr, *imag_ptr;
 static uint8_t package[BLE_NUS_MAX_DATA_LEN];
 static PackageInfo package_info; 
 static uint32_t package_sent = 0;
 static uint8_t ble_command;
 
+/*
+This function will check the connection.
+*/
 uint8_t check_connection(void)
 {
 	if (m_conn_handle == BLE_CONN_HANDLE_INVALID) 
@@ -51,8 +51,13 @@ uint8_t check_connection(void)
 			
 }
 
-void ble_command_handler(void)
+/*
+This function will handle data transfer. Need to call this function periodically if the connection is alive.
+Need to do,  get pointer of metadata, real, imag and freq (separated function). Will impliment asap.
+*/
+uint8_t ble_command_handler(void)
 {
+	uint8_t transfer_progress = BLE_TRANSFER_COMPLETED;
 	if (check_connection() == BLE_CON_ALIVE)
 	{
 		switch (ble_command)
@@ -60,6 +65,7 @@ void ble_command_handler(void)
 			case 48:
 				send_meta_data_ble(&meta_data);
 				package_sent = 0;
+				transfer_progress = BLE_TRANSFER_IN_PROCEESS;
 				break;
 			
 			case 49:
@@ -76,9 +82,20 @@ void ble_command_handler(void)
 				package_sent = package_info.stop_freq;
 			
 				NRF_LOG_INFO("Sent frequency upto #%d", package_sent);
+			
+				if (package_sent >= meta_data.numPoints)
+				{
+					transfer_progress = BLE_TRANSFER_IN_PROCEESS;
+				}
+				else
+				{
+					transfer_progress = BLE_TRANSFER_COMPLETED;
+				}
 				break;
 		}
 	}
+	
+	return transfer_progress;
 	
 }
 
@@ -143,6 +160,7 @@ void send_meta_data_ble(MetaData *meta_data)
 {
 	
 	NRF_LOG_INFO("Sending metadata.");
+	NRF_LOG_INFO("The sweep has %d frequency data", meta_data->numPoints);
 	static uint8_t buff[11];
 	static uint8_t *ptr; 
 	uint8_t i = 1;
@@ -253,12 +271,12 @@ void bsp_event_handler(bsp_event_t event)
 
 #endif
 
-void send_package_ble(uint8_t *package, uint16_t package_size)
+void send_package_ble(uint8_t *package_to_send, uint16_t size_to_send)
 {
 		uint32_t err_code;
 		do
 		{
-				err_code = ble_nus_data_send(&m_nus, package, &package_size, m_conn_handle);
+				err_code = ble_nus_data_send(&m_nus, package_to_send, &size_to_send, m_conn_handle);
 				if ((err_code != NRF_ERROR_INVALID_STATE) &&
 						(err_code != NRF_ERROR_RESOURCES) &&
 						(err_code != NRF_ERROR_NOT_FOUND))
@@ -777,6 +795,7 @@ void ble_sweep_init(void)
 {
 	
 #ifdef BLE_DEV
+	meta_data.numPoints = DUMMY_SWEEP_SIZE;
 	uint16_t i;
 	for (i=0; i < meta_data.numPoints; i++)
 	{
@@ -785,6 +804,7 @@ void ble_sweep_init(void)
 			imag[i] = i+1;
 	}
 	NRF_LOG_INFO("Created dummy sweep file.");
+	NRF_LOG_INFO("The sweep has %d frequency data", meta_data.numPoints);
 	
 	bool erase_bonds;
 	uart_init();
