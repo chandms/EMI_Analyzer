@@ -68,6 +68,9 @@ Description: A header file contains fucntions and parameters for transfering swe
 #define BLE_CON_DEAD										0
 #define BLE_CON_ALIVE										1
 
+#define BLE_TRANSFER_IN_PROCEESS				1
+#define BLE_TRANSFER_COMPLETED					0
+
 #ifdef BLE_DEV
 #define DUMMY_SWEEP_SIZE                500                                        
 #endif
@@ -85,5 +88,5 @@ void send_meta_data_ble(MetaData *meta_data);
 void send_package_ble(uint8_t *package, uint16_t package_size);
 PackageInfo pack_sweep_data(uint16_t start_freq, MetaData *meta_data, uint32_t *freq, uint16_t *real, uint16_t *imag);
 uint8_t check_connection(void);
-void ble_command_handler(void);
+uint8_t ble_command_handler(void);
 
