@@ -21,19 +21,18 @@ class MetaData():
                f'temperature = {self.temperature}'
 
 def uart_data_received(sender, raw_data):
-    # print(f'RX> ({len(raw_data)} Bytes) {raw_data.decode()}')
-    # print(f'RX> Recieved {len(raw_data)} Bytes')
+    # print(f'RX> ({len(raw_data)} Bytes) {raw_data}')
     message_type = raw_data[0]
     if message_type == 0: # Meta Data
         print(f'Meta Data recieved')
         meta_data.n_freq = int.from_bytes(raw_data[1:5], byteorder='little', signed=False)
         meta_data.time = int.from_bytes(raw_data[5:9], byteorder='little', signed=False)
         meta_data.temperature = int.from_bytes(raw_data[9:11], byteorder='little', signed=False)
-    
+
     else:
         freq_got = int(message_type)
         print(f'Number of frequency = {freq_got}')
-        print(f'RX> Recieved {len(raw_data)} Bytes')
+        # print(f'RX> Recieved {len(raw_data)} Bytes')
         for i in range(freq_got):
             base_index = i*8
             freq = int.from_bytes(raw_data[base_index+1:base_index+5], byteorder='little', signed=False)
@@ -67,6 +66,8 @@ async def connect(device):
         while(command != 'q'):
             if command == 'm':
                 await connection.write_gatt_char(UUID_NORDIC_TX, bytearray('0', 'utf-8'), True)
+                while meta_data.n_freq <= 0:
+                    await asyncio.sleep(0.1)
                 print(f'There are {meta_data.n_freq} frequencies')
             elif command == 'g':
                 while len(sweep) < meta_data.n_freq:
