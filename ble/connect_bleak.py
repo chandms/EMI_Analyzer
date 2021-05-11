@@ -75,22 +75,28 @@ async def connect(device):
             command = connection_command()
         print('Disconnecting ...')
 
-print('Scaning BLE devices ...')
-devices = asyncio.run(scan())
-print(f'Found {len(devices)} devices')
-print(f' # {"name":>20} {"RSSI":>8}')
-print('-'*40)
-for index, device in enumerate(devices):
-    print(f'{index+1:2} {device.name:>20} {device.rssi:>4} dBm')
-print('-'*40)
+def scan_devices():
+    print('Scaning BLE devices ...')
+    devices = asyncio.run(scan())
+    print(f'Found {len(devices)} devices')
+    print(f' # {"name":>20} {"RSSI":>8}')
+    print('-'*40)
+    for index, device in enumerate(devices):
+        print(f'{index+1:2} {device.name:>20} {device.rssi:>4} dBm')
+    print('-'*40)
+    return devices
+
+devices = scan_devices()
 selected = int(input('Select a BLE device: '))
+while selected == 0:
+    devices = scan_devices()
+    selected = int(input('Select a BLE device: '))
 device = devices[selected-1]
 print(f'Connecting to {device.name} ({device.address}) ...')
 
 meta_data = MetaData()
 sweep = []
 connection = asyncio.run(connect(device))
-print(meta_data)
 print(f'Got {len(sweep)} data')
 sweep_df = pd.DataFrame.from_dict(sweep)
 print(sweep_df)
