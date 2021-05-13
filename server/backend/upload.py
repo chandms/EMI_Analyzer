@@ -1,18 +1,17 @@
 from flask_restx import Resource, reqparse
+from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
+from pathlib import Path
 
-# upload_parser = api.parser()
-# upload_parser.add_argument('file', location='files',
-#                            type=FileStorage, required=True)
+path = Path('/home/tam/git/EMI/sweeps')
 
 class UploadHandler(Resource):
-    def get(self, filename):
-        return {'filename': filename}
     
-    def post(self, filename):
+    def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('foo', type=int)
-        # parser.add_argument('filepath', type=FileStorage, location='files')
+        parser.add_argument('file', type=FileStorage, location='files', required=True)
         args = parser.parse_args()
-        print(args)
+        upload_file = args['file']
+        filename = secure_filename(upload_file.filename)
+        upload_file.save(path / filename)
         return {'filename': filename}
