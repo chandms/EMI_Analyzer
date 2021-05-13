@@ -6,8 +6,8 @@ from pathlib import Path
 path = Path('/home/tam/git/EMI/sweeps')
 
 class UploadHandler(Resource):
-    
-    def post(self):
+
+      def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('file', type=FileStorage, location='files', required=True)
         args = parser.parse_args()
