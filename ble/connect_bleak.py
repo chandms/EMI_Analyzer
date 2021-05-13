@@ -4,6 +4,7 @@ import pandas as pd
 import asyncio
 from bleak import BleakScanner
 from bleak import BleakClient
+from upload import upload_sweep
 
 UART_NORDIC = '6E400001-B5A3-F393-E0A9-E50E24DCCA9E'
 UUID_NORDIC_RX = '6E400003-B5A3-F393-E0A9-E50E24DCCA9E'
@@ -105,3 +106,6 @@ path = Path('/home/pi/Desktop/EMI/sweeps')
 filename = path / f'{datetime.datetime.now().replace(microsecond=0).isoformat()}.csv'
 sweep_df.to_csv(filename, index=False)
 print(f'Save to {filename}')
+r = upload_sweep(filename)
+if r.status_code == 200:
+    print('Upload completed.')
