@@ -202,6 +202,14 @@ static void sleep_mode_enter(void)
     APP_ERROR_CHECK(err_code);
 }
 
+/**@brief Function for starting advertising.
+ */
+static void advertising_start(void)
+{
+    uint32_t err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
+    APP_ERROR_CHECK(err_code);
+}
+
 #ifdef BLE_DEV
 
 /**@brief Function for handling events from the BSP module.
@@ -263,6 +271,10 @@ void bsp_event_handler(bsp_event_t event)
 									
 					
 					break;
+				
+				case BSP_EVENT_KEY_3:
+					advertising_start(); 																					// Manually start advertising
+					NRF_LOG_INFO("Start Advertising");
 
         default:
             break;
@@ -561,7 +573,10 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
         case BLE_GAP_EVT_DISCONNECTED:
             NRF_LOG_INFO("Disconnected");
             // LED indication will be changed when advertising starts.
+						err_code = bsp_indication_set(BSP_INDICATE_USER_STATE_OFF);
+//						sd_ble_gap_adv_stop(m_advertising.adv_handle);											// Command to stop advertise
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
+						NRF_LOG_INFO("Stop Advertising");
             break;
 
         case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
@@ -750,6 +765,7 @@ static void advertising_init(void)
     init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
     init.config.ble_adv_fast_timeout  = APP_ADV_DURATION;
     init.evt_handler = on_adv_evt;
+		init.config.ble_adv_on_disconnect_disabled = true; 							// After connection end, do not automatically advertise
 
     err_code = ble_advertising_init(&m_advertising, &init);
     APP_ERROR_CHECK(err_code);
@@ -779,15 +795,6 @@ static void conn_params_init(void)
     cp_init.error_handler                  = conn_params_error_handler;
 
     err_code = ble_conn_params_init(&cp_init);
-    APP_ERROR_CHECK(err_code);
-}
-
-
-/**@brief Function for starting advertising.
- */
-static void advertising_start(void)
-{
-    uint32_t err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
 }
 
