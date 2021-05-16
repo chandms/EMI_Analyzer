@@ -89,7 +89,7 @@ def scan_devices():
     return devices
 
 devices = scan_devices()
-selected = int(input('Select a BLE device: '))
+selected = int(input('Select a BLE device (0 to rescan): '))
 while selected == 0:
     devices = scan_devices()
     selected = int(input('Select a BLE device: '))
@@ -98,14 +98,19 @@ print(f'Connecting to {device.name} ({device.address}) ...')
 
 meta_data = MetaData()
 sweep = []
-connection = asyncio.run(connect(device))
+try:
+    asyncio.run(connect(device))
+except:
+    print('Connection fail.')
+    exit(0)
 print(f'Got {len(sweep)} data')
 sweep_df = pd.DataFrame.from_dict(sweep)
 print(sweep_df)
 path = Path('/home/pi/Desktop/EMI/sweeps')
-filename = path / f'{datetime.datetime.now().replace(microsecond=0).isoformat()}.csv'
+filename = path / f'{device.name}-{datetime.datetime.now().replace(microsecond=0).isoformat()}.csv'
 sweep_df.to_csv(filename, index=False)
 print(f'Save to {filename}')
 r = upload_sweep(filename)
 if r.status_code == 200:
     print('Upload completed.')
+print('Disconnected.')
