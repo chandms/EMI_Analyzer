@@ -1,6 +1,6 @@
 /*
-Author: Thirawat Bureetes
-Email: tbureete@purdue.edu
+Author: Thirawat Bureetes, Henry Silva
+Email: tbureete@purdue.edu, silva67@purdue.edu
 Date: 4/20/2021
 Description: A file contains fucntions and parameters for transfering sweep file via ble.
 */
@@ -27,18 +27,19 @@ static uint16_t real[DUMMY_SWEEP_SIZE], imag[DUMMY_SWEEP_SIZE];
 #endif
 
 static MetaData meta_data;
-//static MetaData *meta_data_ptr;
-//static uint32_t *freq_ptr;
-//static uint16_t *real_ptr, *imag_ptr;
+static MetaData *meta_data_ptr;
+static uint32_t *freq_ptr;
+static uint16_t *real_ptr, *imag_ptr;
 static uint8_t package[BLE_NUS_MAX_DATA_LEN];
 static PackageInfo package_info; 
 static uint32_t package_sent = 0;
 static uint8_t ble_command;
+static bool command_received = false;
 
 /*
 This function will check the connection.
 */
-uint8_t check_connection(void)
+uint8_t ble_check_connection(void)
 {
 	if (m_conn_handle == BLE_CONN_HANDLE_INVALID) 
 	{
@@ -48,7 +49,23 @@ uint8_t check_connection(void)
 	{
 		return BLE_CON_ALIVE;
 	}
-			
+}
+
+/*
+This function checks if a new command has been received.
+It sets command received to false if it was true.
+*/
+bool ble_check_command(void)
+{
+  if (command_received)
+  {
+    command_received = false;
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 /*
@@ -57,27 +74,27 @@ Need to do,  get pointer of metadata, real, imag and freq (separated function). 
 */
 uint8_t ble_command_handler(void)
 {
-	uint8_t transfer_progress = BLE_TRANSFER_COMPLETED;
-	if (check_connection() == BLE_CON_ALIVE)
+	uint8_t transfer_progress = BLE_TRANSFER_IN_PROGRESS;
+	if (ble_check_connection() == BLE_CON_ALIVE && ble_check_command())
 	{
 		switch (ble_command)
 		{
 			case 48:
 				send_meta_data_ble(&meta_data);
 				package_sent = 0;
-				transfer_progress = BLE_TRANSFER_IN_PROCEESS;
+				transfer_progress = BLE_TRANSFER_IN_PROGRESS;
 				break;
 			
 			case 49:
-				package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+				package_info = pack_sweep_data(package_sent, meta_data_ptr, freq_ptr, real_ptr, imag_ptr);
 				send_package_ble(package_info.ptr, package_info.package_size);
 				package_sent = package_info.stop_freq;
 				
-				package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+				package_info = pack_sweep_data(package_sent, meta_data_ptr, freq_ptr, real_ptr, imag_ptr);
 				send_package_ble(package_info.ptr, package_info.package_size);
 				package_sent = package_info.stop_freq;
 			
-				package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+				package_info = pack_sweep_data(package_sent, meta_data_ptr, freq_ptr, real_ptr, imag_ptr);
 				send_package_ble(package_info.ptr, package_info.package_size);
 				package_sent = package_info.stop_freq;
 			
@@ -85,11 +102,11 @@ uint8_t ble_command_handler(void)
 			
 				if (package_sent >= meta_data.numPoints)
 				{
-					transfer_progress = BLE_TRANSFER_IN_PROCEESS;
+					transfer_progress = BLE_TRANSFER_IN_PROGRESS;
 				}
 				else
 				{
-					transfer_progress = BLE_TRANSFER_COMPLETED;
+					transfer_progress = BLE_TRANSFER_COMPLETE;
 				}
 				break;
 		}
@@ -97,6 +114,41 @@ uint8_t ble_command_handler(void)
 	
 	return transfer_progress;
 	
+}
+
+/* This function stages a sweep to be sent over BLE.
+ * It sets the pointers in this file to the data to send.
+ * IMPORTANT: Sweep must be unstaged when connection is done with unstage_sweep()
+ */
+bool ble_stage_sweep(uint32_t * freq, uint16_t * real, uint16_t * imag, MetaData * meta)
+{ 
+  // make sure the pointers are not NULL
+  if (freq != NULL && real != NULL && imag != NULL && meta != NULL)
+  {
+    // set the pointers
+    freq_ptr = freq;
+    real_ptr = real,
+    imag_ptr = imag;
+    meta_data_ptr = meta;
+		meta_data.numPoints = meta->numPoints;
+		
+		NRF_LOG_INFO("Sweeps loaded with %d points", meta->numPoints);
+		NRF_LOG_FLUSH();
+
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+void ble_unstage_sweep(void)
+{
+  freq_ptr = NULL;
+  real_ptr = NULL;
+  imag_ptr = NULL;
+  meta_data_ptr = NULL;
 }
 
 PackageInfo pack_sweep_data(uint16_t start_freq, MetaData *meta_data, uint32_t *freq, uint16_t *real, uint16_t *imag)
@@ -145,7 +197,6 @@ PackageInfo pack_sweep_data(uint16_t start_freq, MetaData *meta_data, uint32_t *
 			package_ptr++;
 		}
 		
-	
 		freq++;
 		real++;
 		imag++;
@@ -190,23 +241,17 @@ void send_meta_data_ble(MetaData *meta_data)
  */
 static void sleep_mode_enter(void)
 {
-    uint32_t err_code = bsp_indication_set(BSP_INDICATE_IDLE);
+    uint32_t err_code;
+#ifdef BLE_DEV
+    err_code = bsp_indication_set(BSP_INDICATE_IDLE);
     APP_ERROR_CHECK(err_code);
 
     // Prepare wakeup buttons.
     err_code = bsp_btn_ble_sleep_mode_prepare();
     APP_ERROR_CHECK(err_code);
-
+#endif
     // Go to system-off mode (this function will not return; wakeup will cause a reset).
     err_code = sd_power_system_off();
-    APP_ERROR_CHECK(err_code);
-}
-
-/**@brief Function for starting advertising.
- */
-static void advertising_start(void)
-{
-    uint32_t err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -271,10 +316,6 @@ void bsp_event_handler(bsp_event_t event)
 									
 					
 					break;
-				
-				case BSP_EVENT_KEY_3:
-					advertising_start(); 																					// Manually start advertising
-					NRF_LOG_INFO("Start Advertising");
 
         default:
             break;
@@ -318,6 +359,9 @@ static void nus_data_handler(ble_nus_evt_t * p_evt)
 //				NRF_LOG_INFO("Recieved %d bytes", p_evt->params.rx_data.length);
 //				NRF_LOG_INFO("Recieved: %d", (uint8_t)p_evt->params.rx_data.p_data[0]);
 				ble_command = (uint8_t)p_evt->params.rx_data.p_data[0];
+
+        // set command_received to true
+        command_received = true;
 			
 #ifdef BLE_DEV
 			
@@ -539,8 +583,10 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
     switch (ble_adv_evt)
     {
         case BLE_ADV_EVT_FAST:
+#ifdef BLE_DEV
             err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
             APP_ERROR_CHECK(err_code);
+#endif
             break;
         case BLE_ADV_EVT_IDLE:
             sleep_mode_enter();
@@ -563,8 +609,10 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
     {
         case BLE_GAP_EVT_CONNECTED:
             NRF_LOG_INFO("Connected");
+#ifdef BLE_DEV
             err_code = bsp_indication_set(BSP_INDICATE_CONNECTED);
             APP_ERROR_CHECK(err_code);
+#endif
             m_conn_handle = p_ble_evt->evt.gap_evt.conn_handle;
             err_code = nrf_ble_qwr_conn_handle_assign(&m_qwr, m_conn_handle);
             APP_ERROR_CHECK(err_code);
@@ -573,10 +621,11 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
         case BLE_GAP_EVT_DISCONNECTED:
             NRF_LOG_INFO("Disconnected");
             // LED indication will be changed when advertising starts.
-						err_code = bsp_indication_set(BSP_INDICATE_USER_STATE_OFF);
-//						sd_ble_gap_adv_stop(m_advertising.adv_handle);											// Command to stop advertise
             m_conn_handle = BLE_CONN_HANDLE_INVALID;
-						NRF_LOG_INFO("Stop Advertising");
+            // set command received to false
+            command_received = false;
+            // unstage the current sweep
+            ble_unstage_sweep();
             break;
 
         case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
@@ -765,7 +814,6 @@ static void advertising_init(void)
     init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
     init.config.ble_adv_fast_timeout  = APP_ADV_DURATION;
     init.evt_handler = on_adv_evt;
-		init.config.ble_adv_on_disconnect_disabled = true; 							// After connection end, do not automatically advertise
 
     err_code = ble_advertising_init(&m_advertising, &init);
     APP_ERROR_CHECK(err_code);
@@ -795,6 +843,15 @@ static void conn_params_init(void)
     cp_init.error_handler                  = conn_params_error_handler;
 
     err_code = ble_conn_params_init(&cp_init);
+    APP_ERROR_CHECK(err_code);
+}
+
+
+/**@brief Function for starting advertising.
+ */
+static void advertising_start(void)
+{
+    uint32_t err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
 }
 
