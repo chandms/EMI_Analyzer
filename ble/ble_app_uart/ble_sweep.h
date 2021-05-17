@@ -1,14 +1,12 @@
 /*
-Author: Thirawat Bureetes
-Email: tbureete@purdue.edu
+Author: Thirawat Bureetes, Henry Silva
+Email: tbureete@purdue.edu, silva67@purdue.edu
 Date: 4/20/2021
 Description: A header file contains fucntions and parameters for transfering sweep file via ble.
 */
 
 #include <stdint.h>
 #include <string.h>
-#include "nordic_common.h"
-#include "nrf.h"
 #include "ble_hci.h"
 #include "ble_advdata.h"
 #include "ble_advertising.h"
@@ -20,18 +18,20 @@ Description: A header file contains fucntions and parameters for transfering swe
 #include "nrf_ble_qwr.h"
 #include "app_timer.h"
 #include "ble_nus.h"
-#include "app_uart.h"
 #include "app_util_platform.h"
-#include "bsp_btn_ble.h"
 #include "nrf_pwr_mgmt.h"
 #include "nrf_delay.h"
 
-
+#ifdef BLE_DEV
+#include "nordic_common.h"
+#include "nrf.h"
+#include "bsp_btn_ble.h"
 #if defined (UART_PRESENT)
 #include "nrf_uart.h"
 #endif
 #if defined (UARTE_PRESENT)
 #include "nrf_uarte.h"
+#endif
 #endif
 
 #include "nrf_log.h"
@@ -43,15 +43,14 @@ Description: A header file contains fucntions and parameters for transfering swe
 
 #define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
-#define DEVICE_NAME                     "EMI_BLE_DEV"                               /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "EMI_BLE_DEV2"                               /**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define APP_BLE_OBSERVER_PRIO           3                                           /**< Application's BLE observer priority. You shouldn't need to modify this value. */
 
 #define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 
-#define APP_ADV_DURATION                6000                                        /**< The advertising duration (60 seconds) in units of 10 milliseconds. */
-//#define APP_ADV_DURATION                BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED   		/**< The advertising time-out (in units of seconds). When set to 0, we will never time out. */
+#define APP_ADV_DURATION                18000                                       /**< The advertising duration (180 seconds) in units of 10 milliseconds. */
 
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
 #define MAX_CONN_INTERVAL               MSEC_TO_UNITS(75, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
@@ -69,8 +68,8 @@ Description: A header file contains fucntions and parameters for transfering swe
 #define BLE_CON_DEAD										0
 #define BLE_CON_ALIVE										1
 
-#define BLE_TRANSFER_IN_PROCEESS				1
-#define BLE_TRANSFER_COMPLETED					0
+#define BLE_TRANSFER_IN_PROGRESS			  1
+#define BLE_TRANSFER_COMPLETE 					0
 
 #ifdef BLE_DEV
 #define DUMMY_SWEEP_SIZE                500                                        
@@ -86,8 +85,11 @@ typedef struct package_info
 
 void ble_sweep_init(void);
 void send_meta_data_ble(MetaData *meta_data);
+bool ble_stage_sweep(uint32_t * freq, uint16_t * real, uint16_t * imag, MetaData * meta);
+void ble_unstage_sweep(void);
 void send_package_ble(uint8_t *package, uint16_t package_size);
 PackageInfo pack_sweep_data(uint16_t start_freq, MetaData *meta_data, uint32_t *freq, uint16_t *real, uint16_t *imag);
-uint8_t check_connection(void);
+uint8_t ble_check_connection(void);
+bool ble_check_command(void);
 uint8_t ble_command_handler(void);
 
