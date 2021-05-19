@@ -295,7 +295,7 @@ void bsp_event_handler(bsp_event_t event)
 				case BSP_EVENT_KEY_2:
 					
 				
-					if (check_connection() == BLE_CON_ALIVE)
+					if (ble_check_connection() == BLE_CON_ALIVE)
 					{
 						NRF_LOG_INFO("Transfering dummy sweep file.");
 						send_meta_data_ble(&meta_data);	

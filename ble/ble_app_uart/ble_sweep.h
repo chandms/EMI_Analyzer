@@ -26,6 +26,7 @@ Description: A header file contains fucntions and parameters for transfering swe
 #include "nordic_common.h"
 #include "nrf.h"
 #include "bsp_btn_ble.h"
+#include "app_uart.h"
 #if defined (UART_PRESENT)
 #include "nrf_uart.h"
 #endif
@@ -43,14 +44,14 @@ Description: A header file contains fucntions and parameters for transfering swe
 
 #define APP_BLE_CONN_CFG_TAG            1                                           /**< A tag identifying the SoftDevice BLE configuration. */
 
-#define DEVICE_NAME                     "EMI_BLE_DEV2"                               /**< Name of device. Will be included in the advertising data. */
+#define DEVICE_NAME                     "EMI_BLE_DEV"                               /**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
 #define APP_BLE_OBSERVER_PRIO           3                                           /**< Application's BLE observer priority. You shouldn't need to modify this value. */
 
 #define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 
-#define APP_ADV_DURATION                18000                                       /**< The advertising duration (180 seconds) in units of 10 milliseconds. */
+#define APP_ADV_DURATION 				BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED 		/**< The advertising time-out (in units of seconds). When set to 0, we will never time out. */
 
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
 #define MAX_CONN_INTERVAL               MSEC_TO_UNITS(75, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
@@ -65,11 +66,11 @@ Description: A header file contains fucntions and parameters for transfering swe
 #define UART_TX_BUF_SIZE                256                                         /**< UART TX buffer size. */
 #define UART_RX_BUF_SIZE                256                                         /**< UART RX buffer size. */
 
-#define BLE_CON_DEAD										0
-#define BLE_CON_ALIVE										1
+#define BLE_CON_DEAD					0
+#define BLE_CON_ALIVE					1
 
-#define BLE_TRANSFER_IN_PROGRESS			  1
-#define BLE_TRANSFER_COMPLETE 					0
+#define BLE_TRANSFER_IN_PROGRESS		1
+#define BLE_TRANSFER_COMPLETE 			0
 
 #ifdef BLE_DEV
 #define DUMMY_SWEEP_SIZE                500                                        
