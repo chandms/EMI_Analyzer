@@ -100,7 +100,7 @@ uint8_t ble_command_handler(void)
 			
 				NRF_LOG_INFO("Sent frequency upto #%d", package_sent);
 			
-				if (package_sent >= meta_data.numPoints)
+				if (package_sent <= meta_data.numPoints)
 				{
 					transfer_progress = BLE_TRANSFER_IN_PROGRESS;
 				}
