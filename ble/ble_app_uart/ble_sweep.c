@@ -235,12 +235,21 @@ void send_meta_data_ble(MetaData *meta_data)
 	send_package_ble(buff, (uint16_t)sizeof(buff));
 }
 
+/**@brief Function for starting advertising.
+ */
+void advertising_start(void)
+{
+    uint32_t err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
+    APP_ERROR_CHECK(err_code);
+}
+
 /**@brief Function for putting the chip into sleep mode.
  *
  * @note This function will not return.
  */
 static void sleep_mode_enter(void)
 {
+		NRF_LOG_INFO("Enter sleep mode.");
     uint32_t err_code;
 #ifdef BLE_DEV
     err_code = bsp_indication_set(BSP_INDICATE_IDLE);
@@ -292,8 +301,7 @@ void bsp_event_handler(bsp_event_t event)
             }
             break;
 				
-				case BSP_EVENT_KEY_2:
-					
+				case BSP_EVENT_KEY_2:			
 				
 					if (ble_check_connection() == BLE_CON_ALIVE)
 					{
@@ -313,10 +321,16 @@ void bsp_event_handler(bsp_event_t event)
 						send_package_ble(package_info.ptr, package_info.package_size);
 						package_sent = package_info.stop_freq;
 					}
-									
+														
+					break;
+					
+				case BSP_EVENT_KEY_3:
+					
+					advertising_start(); 																					// Manually start advertising
+					NRF_LOG_INFO("Start Advertising");
 					
 					break;
-
+					
         default:
             break;
     }
@@ -582,12 +596,12 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 
     switch (ble_adv_evt)
     {
-        case BLE_ADV_EVT_FAST:
 #ifdef BLE_DEV
+        case BLE_ADV_EVT_FAST:
             err_code = bsp_indication_set(BSP_INDICATE_ADVERTISING);
             APP_ERROR_CHECK(err_code);
-#endif
             break;
+#endif
         case BLE_ADV_EVT_IDLE:
             sleep_mode_enter();
             break;
@@ -626,6 +640,11 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
             command_received = false;
             // unstage the current sweep
             ble_unstage_sweep();
+						NRF_LOG_INFO("Stop Advertising");
+#ifdef BLE_DEV
+            err_code = bsp_indication_set(BSP_INDICATE_USER_STATE_OFF);
+            APP_ERROR_CHECK(err_code);
+#endif
             break;
 
         case BLE_GAP_EVT_PHY_UPDATE_REQUEST:
@@ -814,6 +833,7 @@ static void advertising_init(void)
     init.config.ble_adv_fast_interval = APP_ADV_INTERVAL;
     init.config.ble_adv_fast_timeout  = APP_ADV_DURATION;
     init.evt_handler = on_adv_evt;
+		init.config.ble_adv_on_disconnect_disabled = true;
 
     err_code = ble_advertising_init(&m_advertising, &init);
     APP_ERROR_CHECK(err_code);
@@ -846,14 +866,6 @@ static void conn_params_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
-
-/**@brief Function for starting advertising.
- */
-static void advertising_start(void)
-{
-    uint32_t err_code = ble_advertising_start(&m_advertising, BLE_ADV_MODE_FAST);
-    APP_ERROR_CHECK(err_code);
-}
 
 void ble_sweep_init(void)
 {

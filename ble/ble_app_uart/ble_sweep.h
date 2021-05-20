@@ -51,7 +51,7 @@ Description: A header file contains fucntions and parameters for transfering swe
 
 #define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
 
-#define APP_ADV_DURATION 				BLE_GAP_ADV_TIMEOUT_GENERAL_UNLIMITED 		/**< The advertising time-out (in units of seconds). When set to 0, we will never time out. */
+#define APP_ADV_DURATION 								18000 																			/**< The advertising time-out (in units of 10 ms). When set to 0, we will never time out. */
 
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(20, UNIT_1_25_MS)             /**< Minimum acceptable connection interval (20 ms), Connection interval uses 1.25 ms units. */
 #define MAX_CONN_INTERVAL               MSEC_TO_UNITS(75, UNIT_1_25_MS)             /**< Maximum acceptable connection interval (75 ms), Connection interval uses 1.25 ms units. */
@@ -93,4 +93,5 @@ PackageInfo pack_sweep_data(uint16_t start_freq, MetaData *meta_data, uint32_t *
 uint8_t ble_check_connection(void);
 bool ble_check_command(void);
 uint8_t ble_command_handler(void);
+void advertising_start(void);
 
