@@ -1,0 +1,8 @@
+env: 'qa'
+
+upload_uri:
+  dev: 'localhost:5000/upload/'
+  qa: 'http://10.165.76.237:50000/upload/'
+  prod: 'http://128.46.205.252:50000/upload/'
+
+sweep_path: '/home/pi/Desktop/EMI/sweeps'
