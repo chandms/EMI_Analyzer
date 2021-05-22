@@ -22,11 +22,11 @@ static ble_uuid_t m_adv_uuids[]          =                                      
 
 
 #ifdef BLE_DEV
-static uint32_t freq[DUMMY_SWEEP_SIZE];
-static uint16_t real[DUMMY_SWEEP_SIZE], imag[DUMMY_SWEEP_SIZE];
+static uint32_t *freq;
+static uint16_t *real, *imag;
+static MetaData *meta_data;
 #endif
 
-static MetaData meta_data;
 static MetaData *meta_data_ptr;
 static uint32_t *freq_ptr;
 static uint16_t *real_ptr, *imag_ptr;
@@ -80,7 +80,7 @@ uint8_t ble_command_handler(void)
 		switch (ble_command)
 		{
 			case 48:
-				send_meta_data_ble(&meta_data);
+				send_meta_data_ble(meta_data_ptr);
 				package_sent = 0;
 				transfer_progress = BLE_TRANSFER_IN_PROGRESS;
 				break;
@@ -100,7 +100,7 @@ uint8_t ble_command_handler(void)
 			
 				NRF_LOG_INFO("Sent frequency upto #%d", package_sent);
 			
-				if (package_sent <= meta_data.numPoints)
+				if (package_sent <= meta_data_ptr->numPoints)
 				{
 					transfer_progress = BLE_TRANSFER_IN_PROGRESS;
 				}
@@ -120,7 +120,7 @@ uint8_t ble_command_handler(void)
  * It sets the pointers in this file to the data to send.
  * IMPORTANT: Sweep must be unstaged when connection is done with unstage_sweep()
  */
-bool ble_stage_sweep(uint32_t * freq, uint16_t * real, uint16_t * imag, MetaData * meta)
+bool ble_stage_sweep(uint32_t *freq, uint16_t *real, uint16_t *imag, MetaData *meta)
 { 
   // make sure the pointers are not NULL
   if (freq != NULL && real != NULL && imag != NULL && meta != NULL)
@@ -130,7 +130,6 @@ bool ble_stage_sweep(uint32_t * freq, uint16_t * real, uint16_t * imag, MetaData
     real_ptr = real,
     imag_ptr = imag;
     meta_data_ptr = meta;
-		meta_data.numPoints = meta->numPoints;
 		
 		NRF_LOG_INFO("Sweeps loaded with %d points", meta->numPoints);
 		NRF_LOG_FLUSH();
@@ -306,18 +305,18 @@ void bsp_event_handler(bsp_event_t event)
 					if (ble_check_connection() == BLE_CON_ALIVE)
 					{
 						NRF_LOG_INFO("Transfering dummy sweep file.");
-						send_meta_data_ble(&meta_data);	
-						NRF_LOG_INFO("The sweep has %d frequency data", meta_data.numPoints);
+						send_meta_data_ble(meta_data);	
+						NRF_LOG_INFO("The sweep has %d frequency data", meta_data->numPoints);
 						
-						package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+						package_info = pack_sweep_data(package_sent, meta_data, freq, real, imag);
 						send_package_ble(package_info.ptr, package_info.package_size);
 						package_sent = package_info.stop_freq;
 						
-						package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+						package_info = pack_sweep_data(package_sent, meta_data, freq, real, imag);
 						send_package_ble(package_info.ptr, package_info.package_size);
 						package_sent = package_info.stop_freq;
 					
-						package_info = pack_sweep_data(package_sent, &meta_data, (uint32_t *)freq, (uint16_t *)real, (uint16_t *)imag);
+						package_info = pack_sweep_data(package_sent, meta_data, freq, real, imag);
 						send_package_ble(package_info.ptr, package_info.package_size);
 						package_sent = package_info.stop_freq;
 					}
@@ -325,7 +324,7 @@ void bsp_event_handler(bsp_event_t event)
 					break;
 					
 				case BSP_EVENT_KEY_3:
-					
+					ble_stage_sweep(freq, real, imag, meta_data);
 					advertising_start(); 																					// Manually start advertising
 					NRF_LOG_INFO("Start Advertising");
 					
@@ -370,7 +369,6 @@ static void nus_data_handler(ble_nus_evt_t * p_evt)
         NRF_LOG_DEBUG("Received data from BLE NUS. Writing data on UART.");
         NRF_LOG_HEXDUMP_DEBUG(p_evt->params.rx_data.p_data, p_evt->params.rx_data.length);
 				
-//				NRF_LOG_INFO("Recieved %d bytes", p_evt->params.rx_data.length);
 //				NRF_LOG_INFO("Recieved: %d", (uint8_t)p_evt->params.rx_data.p_data[0]);
 				ble_command = (uint8_t)p_evt->params.rx_data.p_data[0];
 
@@ -871,21 +869,27 @@ void ble_sweep_init(void)
 {
 	
 #ifdef BLE_DEV
-	meta_data.numPoints = DUMMY_SWEEP_SIZE;
-	uint16_t i;
-	for (i=0; i < meta_data.numPoints; i++)
+	
+	bool erase_bonds;
+	uart_init();
+	log_init();
+	buttons_leds_init(&erase_bonds);
+	meta_data = (MetaData*)malloc(sizeof(MetaData));
+	meta_data->numPoints = DUMMY_SWEEP_SIZE;
+	freq = (uint32_t*)malloc(DUMMY_SWEEP_SIZE*sizeof(uint32_t));
+	real = (uint16_t*)malloc(DUMMY_SWEEP_SIZE*sizeof(uint16_t));
+	imag = (uint16_t*)malloc(DUMMY_SWEEP_SIZE*sizeof(uint16_t));
+	for (uint16_t i=0; i < meta_data->numPoints; i++)
 	{
 			freq[i] = i+1;
 			real[i] = i+1;
 			imag[i] = i+1;
 	}
 	NRF_LOG_INFO("Created dummy sweep file.");
-	NRF_LOG_INFO("The sweep has %d frequency data", meta_data.numPoints);
+	NRF_LOG_INFO("The sweep has %d frequency data", meta_data->numPoints);
 	
-	bool erase_bonds;
-	uart_init();
-	log_init();
-	buttons_leds_init(&erase_bonds);
+	ble_stage_sweep(freq, real, imag, meta_data);
+	
 #endif
 	
 	timers_init();
