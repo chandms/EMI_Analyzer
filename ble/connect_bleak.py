@@ -1,9 +1,12 @@
 import datetime
+import yaml
 from pathlib import Path
-import pandas as pd
+from pandas import DataFrame
+
 import asyncio
 from bleak import BleakScanner
 from bleak import BleakClient
+
 from upload import upload_sweep
 
 UART_NORDIC = '6E400001-B5A3-F393-E0A9-E50E24DCCA9E'
@@ -88,11 +91,14 @@ def scan_devices():
     print('-'*40)
     return devices
 
+with open('config.yaml') as f:
+    configs = yaml.load(f, Loader=yaml.FullLoader)
+
 devices = scan_devices()
 selected = int(input('Select a BLE device (0 to rescan): '))
 while selected == 0:
     devices = scan_devices()
-    selected = int(input('Select a BLE device: '))
+    selected = int(input('Select a BLE device (0 to rescan): '))
 device = devices[selected-1]
 print(f'Connecting to {device.name} ({device.address}) ...')
 
@@ -104,13 +110,15 @@ except:
     print('Connection fail.')
     exit(0)
 print(f'Got {len(sweep)} data')
-sweep_df = pd.DataFrame.from_dict(sweep)
+sweep_df = DataFrame.from_dict(sweep)
 print(sweep_df)
 path = Path('/home/pi/Desktop/EMI/sweeps')
 filename = path / f'{device.name}-{datetime.datetime.now().replace(microsecond=0).isoformat()}.csv'
 sweep_df.to_csv(filename, index=False)
 print(f'Save to {filename}')
-r = upload_sweep(filename)
+uri = configs['upload_uri'][configs['env']]
+print(f'Uploading sweep file to {uri}')
+r = upload_sweep(filename, uri)
 if r.status_code == 200:
-    print('Upload completed.')
+   print('Upload completed.')
 print('Disconnected.')

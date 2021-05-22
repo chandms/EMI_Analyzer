@@ -1,4 +1,4 @@
-env: 'qa'
+env: 'dev'
 
 upload_uri:
   dev: 'http://10.165.76.237:50000/upload/'
