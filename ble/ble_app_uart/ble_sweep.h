@@ -86,10 +86,10 @@ typedef struct package_info
 
 void ble_sweep_init(void);
 void send_meta_data_ble(MetaData *meta_data);
-bool ble_stage_sweep(uint32_t * freq, uint16_t * real, uint16_t * imag, MetaData * meta);
+bool ble_stage_sweep(uint32_t *freq, int16_t *real, int16_t *imag, MetaData *meta);
 void ble_unstage_sweep(void);
 void send_package_ble(uint8_t *package, uint16_t package_size);
-PackageInfo pack_sweep_data(uint16_t start_freq, MetaData *meta_data, uint32_t *freq, uint16_t *real, uint16_t *imag);
+PackageInfo pack_sweep_data(uint16_t start_freq, MetaData *meta_data, uint32_t *freq, int16_t *real, int16_t *imag);
 uint8_t ble_check_connection(void);
 bool ble_check_command(void);
 uint8_t ble_command_handler(void);

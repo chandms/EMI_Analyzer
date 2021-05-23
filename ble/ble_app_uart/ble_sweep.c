@@ -23,13 +23,13 @@ static ble_uuid_t m_adv_uuids[]          =                                      
 
 #ifdef BLE_DEV
 static uint32_t *freq;
-static uint16_t *real, *imag;
+static int16_t *real, *imag;
 static MetaData *meta_data;
 #endif
 
 static MetaData *meta_data_ptr;
 static uint32_t *freq_ptr;
-static uint16_t *real_ptr, *imag_ptr;
+static int16_t *real_ptr, *imag_ptr;
 static uint8_t package[BLE_NUS_MAX_DATA_LEN];
 static PackageInfo package_info; 
 static uint32_t package_sent = 0;
@@ -120,7 +120,7 @@ uint8_t ble_command_handler(void)
  * It sets the pointers in this file to the data to send.
  * IMPORTANT: Sweep must be unstaged when connection is done with unstage_sweep()
  */
-bool ble_stage_sweep(uint32_t *freq, uint16_t *real, uint16_t *imag, MetaData *meta)
+bool ble_stage_sweep(uint32_t *freq, int16_t *real, int16_t *imag, MetaData *meta)
 { 
   // make sure the pointers are not NULL
   if (freq != NULL && real != NULL && imag != NULL && meta != NULL)
@@ -150,7 +150,7 @@ void ble_unstage_sweep(void)
   meta_data_ptr = NULL;
 }
 
-PackageInfo pack_sweep_data(uint16_t start_freq, MetaData *meta_data, uint32_t *freq, uint16_t *real, uint16_t *imag)
+PackageInfo pack_sweep_data(uint16_t start_freq, MetaData *meta_data, uint32_t *freq, int16_t *real, int16_t *imag)
 {
 	PackageInfo package_info = {
 		.ptr = package,
@@ -877,13 +877,13 @@ void ble_sweep_init(void)
 	meta_data = (MetaData*)malloc(sizeof(MetaData));
 	meta_data->numPoints = DUMMY_SWEEP_SIZE;
 	freq = (uint32_t*)malloc(DUMMY_SWEEP_SIZE*sizeof(uint32_t));
-	real = (uint16_t*)malloc(DUMMY_SWEEP_SIZE*sizeof(uint16_t));
-	imag = (uint16_t*)malloc(DUMMY_SWEEP_SIZE*sizeof(uint16_t));
+	real = (int16_t*)malloc(DUMMY_SWEEP_SIZE*sizeof(int16_t));
+	imag = (int16_t*)malloc(DUMMY_SWEEP_SIZE*sizeof(int16_t));
 	for (uint16_t i=0; i < meta_data->numPoints; i++)
 	{
 			freq[i] = i+1;
 			real[i] = i+1;
-			imag[i] = i+1;
+			imag[i] = (i+1) * -1;
 	}
 	NRF_LOG_INFO("Created dummy sweep file.");
 	NRF_LOG_INFO("The sweep has %d frequency data", meta_data->numPoints);
