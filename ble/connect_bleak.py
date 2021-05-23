@@ -40,8 +40,8 @@ def uart_data_received(sender, raw_data):
         for i in range(freq_got):
             base_index = i*8
             freq = int.from_bytes(raw_data[base_index+1:base_index+5], byteorder='little', signed=False)
-            real = int.from_bytes(raw_data[base_index+5:base_index+7], byteorder='little', signed=False)
-            imag = int.from_bytes(raw_data[base_index+7:base_index+9], byteorder='little', signed=False)
+            real = int.from_bytes(raw_data[base_index+5:base_index+7], byteorder='little', signed=True)
+            imag = int.from_bytes(raw_data[base_index+7:base_index+9], byteorder='little', signed=True)
             sweep.append({
                 'freq': freq, 
                 'real': real, 
