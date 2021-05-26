@@ -6,7 +6,7 @@ class SweepAPI(Resource):
 
     def get(self):
         sweeps = []
-        for sweep in Sweep.query.order_by(Sweep.server_time).all():
+        for sweep in Sweep.query.order_by(Sweep.server_time.desc()).all():
             sweeps.append({
                 'id': sweep.id,
                 'filename': sweep.filename,
