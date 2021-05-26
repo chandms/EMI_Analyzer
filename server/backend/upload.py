@@ -1,3 +1,4 @@
+from datetime import datetime
 from flask_restful  import Resource, reqparse
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
@@ -23,9 +24,8 @@ class UploadHandler(Resource):
         sweep_meta = Sweep(
             filename = filename,
             device_name = args['device_name'],
-            # hub_time = args['hub_time']
+            hub_time = datetime.fromisoformat(args['hub_time'])
         )
-        print(sweep_meta)
         db.session.add(sweep_meta)
         db.session.commit()
         
