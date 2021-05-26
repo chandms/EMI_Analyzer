@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timezone
 import yaml
 from pathlib import Path
 from pandas import DataFrame
@@ -84,11 +84,11 @@ def scan_devices():
     print('Scaning BLE devices ...')
     devices = asyncio.run(scan())
     print(f'Found {len(devices)} devices')
-    print(f' # {"name":>20} {"RSSI":>8}')
-    print('-'*40)
+    print(f' # {"name":>20} {"RSSI":>8} {"address":>20}')
+    print('-'*55)
     for index, device in enumerate(devices):
-        print(f'{index+1:2} {device.name:>20} {device.rssi:>4} dBm')
-    print('-'*40)
+        print(f'{index+1:2} {device.name:>20} {device.rssi:>4} dBm {device.address:>20}')
+    print('-'*55)
     return devices
 
 with open('config.yaml') as f:
@@ -113,7 +113,7 @@ print(f'Got {len(sweep)} data')
 sweep_df = DataFrame.from_dict(sweep)
 print(sweep_df)
 path = Path('/home/pi/Desktop/EMI/sweeps')
-filename = path / f'{device.name}-{datetime.datetime.now().replace(microsecond=0).isoformat()}.csv'
+filename = path / f'{device.name}-{datetime.now(timezone.utc).replace(microsecond=0).isoformat()}.csv'
 sweep_df.to_csv(filename, index=False)
 print(f'Save to {filename}')
 uri = configs['upload_uri'][configs['env']]
