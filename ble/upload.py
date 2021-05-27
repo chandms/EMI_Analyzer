@@ -1,3 +1,10 @@
+'''
+Author: Thirawat Bureetes
+Email: tbureete@purdue.edu
+Date: 5/27/2021
+Description: This is function for uploading file to the server.
+'''
+
 import requests
 import yaml
 import re

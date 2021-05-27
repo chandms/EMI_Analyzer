@@ -1,3 +1,10 @@
+'''
+Author: Thirawat Bureetes
+Email: tbureete@purdue.edu
+Date: 5/27/2021
+Description: The main script to connect to ble devices.
+'''
+
 from datetime import datetime, timezone
 import yaml
 from pathlib import Path
