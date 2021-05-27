@@ -1,3 +1,10 @@
+'''
+Author: Thirawat Bureetes
+Email: tbureete@purdue.edu
+Date: 5/27/2021
+Description: Database model file.
+'''
+
 import datetime
 from flask_sqlalchemy import SQLAlchemy
 

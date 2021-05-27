@@ -1,3 +1,9 @@
+'''
+Author: Thirawat Bureetes
+Email: tbureete@purdue.edu
+Date: 5/27/2021
+Description: Database migration script.
+'''
 
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand

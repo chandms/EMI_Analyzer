@@ -1,3 +1,10 @@
+'''
+Author: Thirawat Bureetes
+Email: tbureete@purdue.edu
+Date: 5/27/2021
+Description: API for manage sweep uploading.
+'''
+
 from datetime import datetime
 from flask_restful  import Resource, reqparse
 from werkzeug.utils import secure_filename

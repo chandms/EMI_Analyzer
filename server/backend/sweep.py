@@ -1,3 +1,10 @@
+'''
+Author: Thirawat Bureetes
+Email: tbureete@purdue.edu
+Date: 5/27/2021
+Description: Sweep database API.
+'''
+
 from datetime import datetime
 from flask_restful  import Resource, reqparse
 from models import db, Sweep
