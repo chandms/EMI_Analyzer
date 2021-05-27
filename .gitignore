@@ -4,3 +4,4 @@ venv
 .vscode
 sweeps
 server/backend/migrations/
+.env

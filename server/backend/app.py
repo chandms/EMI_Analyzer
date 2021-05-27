@@ -8,15 +8,23 @@ Description: The main script for backend server.
 from flask import Flask
 from flask_restful  import Api
 from flask_cors import CORS
+from dotenv import dotenv_values
 
 from models import db
 from upload import UploadHandler
 from sweep import SweepAPI
 
+env_config = dotenv_values()
+
 app = Flask(__name__)
 CORS(app)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config["SQLALCHEMY_DATABASE_URI"] = 'postgresql://postgres:1n1t1al0s@10.165.76.237:5432/emi'
+app.config["SQLALCHEMY_DATABASE_URI"] = 'postgresql://' \
+                                        f'{env_config["db_user"]}:' \
+                                        f'{env_config["db_pass"]}@' \
+                                        f'{env_config["db_domain"]}:' \
+                                        f'{env_config["db_port"]}/' \
+                                        f'{env_config["db_table"]}'
 db.init_app(app)
 api = Api(app)
 
