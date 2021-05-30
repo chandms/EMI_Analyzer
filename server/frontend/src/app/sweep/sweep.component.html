@@ -1,7 +1,17 @@
-<ul class="list-group">
-    <li 
-        *ngFor="let sweep of sweeps"
-        class="list-group-item">
-        {{ sweep.filename }}
-    </li>
-</ul>
+
+<div class="container">
+    <table class="table table-striped table-hover table-bordered">
+        <thead>
+            <tr>
+                <th>Device Name</th>
+                <th>Filename</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let sweep of sweeps">
+                <td>{{ sweep.device_name }}</td>
+                <td>{{ sweep.filename }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

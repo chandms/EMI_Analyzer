@@ -15,7 +15,6 @@ export class SweepComponent implements OnInit {
   ngOnInit() {
     this.service.getSweeps()
       .subscribe(Response => {
-        console.log(Response);
         this.sweeps = Response;
       })
   }
