@@ -1,2 +1,7 @@
 __pycache__
 savedData
+venv
+.vscode
+sweeps
+server/backend/migrations/
+.env
