@@ -1,0 +1,19 @@
+
+<div class="container">
+    <table class="table table-striped table-hover table-bordered">
+        <thead>
+            <tr>
+                <th>Device Name</th>
+                <th>Sensor Hub Timestamp</th>
+                <th>Server Timestamp</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let sweep of sweeps">
+                <td>{{ sweep.device_name }}</td>
+                <td>{{ sweep.hub_timestamp }}</td>
+                <td>{{ sweep.server_timestamp }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
