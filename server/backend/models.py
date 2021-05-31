@@ -18,13 +18,14 @@ class Sweep(db.Model):
     filename = db.Column(db.String)
     sensor_time = db.Column(db.DateTime, default=None)
     hub_time = db.Column(db.DateTime, default=None)
-    server_time = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+    server_time = db.Column(db.DateTime)
 
     def __init__(self, device_name, filename, sensor_time=None, hub_time=None):
         self.device_name = device_name
         self.filename = filename
         self.sensor_time = sensor_time
         self.hub_time = hub_time
+        self.server_time = datetime.now(timezone.utc).replace(microsecond=0)
 
     def __repr__(self):
         return f'Sweep from {self.device_name} received.'
