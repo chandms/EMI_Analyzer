@@ -16,7 +16,8 @@ class SweepAPI(Resource):
         for sweep in Sweep.query.order_by(Sweep.server_time.desc()).all():
             sweeps.append({
                 'id': sweep.id,
-                'filename': sweep.filename,
-                'device_name': sweep.device_name
+                'device_name': sweep.device_name,
+                'hub_timestamp': sweep.hub_time.replace(microsecond=0).isoformat(),
+                'server_timestamp': sweep.server_time.replace(microsecond=0).isoformat()
                 })
         return sweeps
