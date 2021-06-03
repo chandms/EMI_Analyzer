@@ -6,12 +6,17 @@ Description: This is function for uploading file to the server.
 '''
 
 import requests
+from requests.models import Response
 import yaml
 import re
-from pathlib import Path
+from pathlib import Path, PosixPath
 from random import choice
 
-def upload_sweep(sweep, uri):
+def upload_sweep(sweep: PosixPath, uri: str) -> Response:
+    '''
+        Upload sweep to the server. Pass a path to sweep file and destination url.
+        Return post request response.
+    '''
     group = re.findall(r'(.*)-(\d{4}-\d{2}-\d{2}T.{8})', sweep.stem)[0]
     body = {
         'device_name': group[0],
