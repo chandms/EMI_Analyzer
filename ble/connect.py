@@ -34,6 +34,24 @@ def meta_callback(sender, raw_data):
         meta_data.temperature = int.from_bytes(raw_data[9:11], byteorder='little', signed=False)
 
 
+def sweep_callback(sender, raw_data):
+    '''
+        Callback funtion for processing sweep data.
+    '''
+    message_type = raw_data[0]
+    freq_got = int(message_type)
+    for i in range(freq_got):
+        base_index = i*8
+        freq = int.from_bytes(raw_data[base_index+1:base_index+5], byteorder='little', signed=False)
+        real = int.from_bytes(raw_data[base_index+5:base_index+7], byteorder='little', signed=True)
+        imag = int.from_bytes(raw_data[base_index+7:base_index+9], byteorder='little', signed=True)
+        sweep.append({
+            'freq': freq, 
+            'real': real, 
+            'imag': imag
+        })
+
+
 def uart_data_received(sender, raw_data):
     '''
         Callback function for receiving data from sensor.
@@ -120,11 +138,17 @@ async def auto_connect(device: BLEDevice):
 
         while meta_data.n_freq <= 0:
             await connection.write_gatt_char(UUID_NORDIC_TX, bytearray('0', 'utf-8'), True)
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.5)
+        
+        await connection.stop_notify(UUID_NORDIC_RX)
+        await asyncio.sleep(0.5)
+        await connection.start_notify(UUID_NORDIC_RX, sweep_callback)
             
         while len(sweep) < meta_data.n_freq:
             await connection.write_gatt_char(UUID_NORDIC_TX, bytearray('1', 'utf-8'), True)
             await asyncio.sleep(0.1)
+
+        await asyncio.sleep(0.5)
 
         return meta_data, sweep
     
