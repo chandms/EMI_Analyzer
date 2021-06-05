@@ -5,6 +5,7 @@ Date: 5/27/2021
 Description: API for manage sweep uploading.
 '''
 
+import yaml
 from datetime import datetime
 from flask_restful  import Resource, reqparse
 from werkzeug.utils import secure_filename
@@ -12,7 +13,11 @@ from werkzeug.datastructures import FileStorage
 from pathlib import Path
 from models import db, Sweep
 
-path = Path('/home/tam/git/EMI/sweeps')
+
+
+with open('config.yaml') as f:
+    configs = yaml.load(f, Loader=yaml.FullLoader)
+    path = Path(configs['sweep_path'])
 
 class UploadHandler(Resource):
 
