@@ -5,19 +5,12 @@ Date: 5/27/2021
 Description: A script for connecting ble.
 '''
 
-from datetime import datetime, timezone
-from typing import List
-import yaml
-from pathlib import Path
-from pandas import DataFrame
-
 import asyncio
 from bleak import BleakScanner
 from bleak import BleakClient
 from bleak.backends.device import BLEDevice
-
-from upload import upload_sweep
-from nordic import UUID_NORDIC_RX, UUID_NORDIC_TX, MetaData
+from meta import MetaData
+from nordic import UUID_NORDIC_RX, UUID_NORDIC_TX, save_sweep
 
 
 sweep = []
@@ -94,7 +87,7 @@ async def scan(time:int=5):
     devices = await BleakScanner.discover(time)
     return devices
 
-def scan_devices() -> List[BLEDevice]:
+def scan_devices():
     '''
         Acticate Bleak scaner coroutine. Return a list of devices back.
     '''
@@ -109,7 +102,10 @@ async def connect(device: BLEDevice):
         while not connection.is_connected:
             await asyncio.sleep(0.5)
         print(f'Connected to {device.address}.')
-        
+
+        meta_data.device_name = device.name
+        meta_data.rssi = device.rssi
+
         await connection.start_notify(UUID_NORDIC_RX, uart_data_received)
         command = connection_command()
         while(command != 'q'):
@@ -123,6 +119,7 @@ async def connect(device: BLEDevice):
                     await connection.write_gatt_char(UUID_NORDIC_TX, bytearray('1', 'utf-8'), True)
                     await asyncio.sleep(0.1)
             command = connection_command()
+
         await asyncio.sleep(0.5)
         print('Disconnecting ...')
 
@@ -157,9 +154,6 @@ async def auto_connect(device: BLEDevice):
     
 if __name__ == '__main__':
 
-    with open('config.yaml') as f:
-        configs = yaml.load(f, Loader=yaml.FullLoader)
-
     print('Scaning BLE devices ...')
     devices = scan_devices()
     print(f'Found {len(devices)} devices')
@@ -182,17 +176,8 @@ if __name__ == '__main__':
         print('Connection fail.')
         print(e)
         exit(0)
-
-    print(f'Got {len(sweep)} data')
-    sweep_df = DataFrame.from_dict(sweep)
-    print(sweep_df)
-    path = Path(configs['sweep_path'])
-    filename = path / f'{device.name}-{datetime.now(timezone.utc).replace(microsecond=0).isoformat()[:-6]}.csv'
-    sweep_df.to_csv(filename, index=False)
-    print(f'Save to {filename}')
-    uri = configs['upload_uri'][configs['env']]
-    print(f'Uploading sweep file to {uri}')
-    r = upload_sweep(filename, uri)
+    
+    r = save_sweep(meta_data, sweep)
     if r.status_code == 200:
        print('Upload completed.')
     print('Disconnected.')

@@ -6,13 +6,13 @@ Description: This is function for uploading file to the server.
 '''
 
 import requests
-from requests.models import Response
 import yaml
 import re
 from pathlib import Path, PosixPath
 from random import choice
+from meta import MetaData
 
-def upload_sweep(sweep: PosixPath, uri: str) -> Response:
+def upload_sweep(sweep: PosixPath, uri: str, meta: MetaData):
     '''
         Upload sweep to the server. Pass a path to sweep file and destination url.
         Return post request response.
@@ -20,13 +20,16 @@ def upload_sweep(sweep: PosixPath, uri: str) -> Response:
     group = re.findall(r'(.*)-(\d{4}-\d{2}-\d{2}T.{8})', sweep.stem)[0]
     body = {
         'device_name': group[0],
-        'hub_time': group[1]
+        'hub_time': group[1],
+        'rssi': meta.rssi,
+        'temperature': meta.temperature,
+        'sensor_time': meta.time
     }
+
     with open(sweep, 'rb') as f:
         files = {'file': f}
         r = requests.post(uri, files=files, data=body)
         return r
-
 
 if __name__ == '__main__':
 
