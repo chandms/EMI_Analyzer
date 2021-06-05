@@ -133,6 +133,9 @@ async def auto_connect(device: BLEDevice):
     async with BleakClient(device) as connection:
         while not connection.is_connected:
             await asyncio.sleep(0.5)
+        
+        meta_data.device_name = device.name
+        meta_data.rssi = device.rssi
 
         await connection.start_notify(UUID_NORDIC_RX, meta_callback)
 

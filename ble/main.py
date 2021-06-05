@@ -29,6 +29,7 @@ if __name__ == '__main__':
     if device is not None:
         print(f'Connecting to {device.name} ({device.address}) ...')
         meta_data, sweep = asyncio.run(auto_connect(device))
+        print(meta_data)
         sweep_df = DataFrame.from_dict(sweep)
         print(sweep_df)
 
