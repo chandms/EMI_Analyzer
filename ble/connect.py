@@ -128,13 +128,11 @@ async def auto_connect(device: BLEDevice):
 
         return meta_data, sweep
     
-
-
-
-with open('config.yaml') as f:
-    configs = yaml.load(f, Loader=yaml.FullLoader)
-
 if __name__ == '__main__':
+
+    with open('config.yaml') as f:
+        configs = yaml.load(f, Loader=yaml.FullLoader)
+
     print('Scaning BLE devices ...')
     devices = scan_devices()
     print(f'Found {len(devices)} devices')
@@ -151,24 +149,23 @@ if __name__ == '__main__':
     device = devices[selected-1]
     print(f'Connecting to {device.name} ({device.address}) ...')
 
-
     try:
         asyncio.run(connect(device))
-    except Exception:
+    except Exception as e:
         print('Connection fail.')
-        print(Exception)
+        print(e)
         exit(0)
 
-# print(f'Got {len(sweep)} data')
-# sweep_df = DataFrame.from_dict(sweep)
-# print(sweep_df)
-# path = Path('/home/pi/Desktop/EMI/sweeps')
-# filename = path / f'{device.name}-{datetime.now(timezone.utc).replace(microsecond=0).isoformat()}.csv'
-# sweep_df.to_csv(filename, index=False)
-# print(f'Save to {filename}')
-# uri = configs['upload_uri'][configs['env']]
-# print(f'Uploading sweep file to {uri}')
-# r = upload_sweep(filename, uri)
-# if r.status_code == 200:
-#    print('Upload completed.')
-# print('Disconnected.')
+    print(f'Got {len(sweep)} data')
+    sweep_df = DataFrame.from_dict(sweep)
+    print(sweep_df)
+    path = Path(configs['sweep_path'])
+    filename = path / f'{device.name}-{datetime.now(timezone.utc).replace(microsecond=0).isoformat()[:-6]}.csv'
+    sweep_df.to_csv(filename, index=False)
+    print(f'Save to {filename}')
+    uri = configs['upload_uri'][configs['env']]
+    print(f'Uploading sweep file to {uri}')
+    r = upload_sweep(filename, uri)
+    if r.status_code == 200:
+       print('Upload completed.')
+    print('Disconnected.')

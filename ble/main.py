@@ -31,6 +31,3 @@ if __name__ == '__main__':
         print(meta_data)
         print(sweep)
 
-
-
-
