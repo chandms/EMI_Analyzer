@@ -46,3 +46,4 @@ if __name__ == '__main__':
     r = upload_sweep(sweep, uri)
     print(f'Status code = {r.status_code}')
     print(r.text)
+    

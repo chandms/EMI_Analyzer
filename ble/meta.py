@@ -22,3 +22,4 @@ class MetaData():
                f'Number of frequency data = {self.n_freq} \n' \
                f'Time = {self.time} \n' \
                f'temperature = {self.temperature}'
+               

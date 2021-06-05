@@ -6,6 +6,7 @@ Description: The main script to connect to ble devices.
 '''
 import re
 import asyncio
+import time
 from bleak import BleakClient
 from bleak.backends.device import BLEDevice
 from logging import raiseExceptions
@@ -34,6 +35,7 @@ async def connect(device: BLEDevice) -> BleakClient:
         return connection
     
     except TimeoutError: 
+        print('Cannot connect to the device.')
         raiseExceptions(asyncio.TimeoutError)
 
     except Exception as e:
@@ -63,11 +65,12 @@ async def automate(device: BLEDevice):
 
 if __name__ == '__main__':
 
-    device = detect_device()
-    if device is not None:
-        asyncio.run(automate(device))
-    else:
-        print('No devices found.')
+    while True:
 
+        device = detect_device()
+        if device is not None:
+            asyncio.run(automate(device))
+        else:
+            print('No devices found.')
+            time.sleep(60)
         
-
