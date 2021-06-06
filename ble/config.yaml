@@ -8,4 +8,4 @@ upload_uri:
 
 sweep_path: '/srv/sweeps'
 
-sleep_duration: 30
+sleep_duration: 60
