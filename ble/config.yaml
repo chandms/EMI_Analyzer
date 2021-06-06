@@ -7,3 +7,5 @@ upload_uri:
   prod: 'http://128.46.205.252:50000/upload'
 
 sweep_path: '/srv/sweeps'
+
+sleep_duration: 30

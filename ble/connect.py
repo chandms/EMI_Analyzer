@@ -128,26 +128,30 @@ async def transfer_data(connection: BleakClient):
         Automatically transfer data function.
     '''
 
+    sweep.clear()
+    meta_data.n_freq = 0
+
     await connection.start_notify(UUID_NORDIC_RX, meta_callback)
 
     while meta_data.n_freq <= 0:
         await connection.write_gatt_char(UUID_NORDIC_TX, bytearray('0', 'utf-8'), True)
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.5)
     
     await connection.stop_notify(UUID_NORDIC_RX)
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(1)
     await connection.start_notify(UUID_NORDIC_RX, sweep_callback)
         
     while len(sweep) < meta_data.n_freq:
         await connection.write_gatt_char(UUID_NORDIC_TX, bytearray('1', 'utf-8'), True)
-        await asyncio.sleep(1)
+        await asyncio.sleep(0.5)
 
     return meta_data, sweep
-    
-if __name__ == '__main__':
 
-    print('Scaning BLE devices ...')
-    devices = scan_devices()
+def print_devices(devices):
+    '''
+        Print a list of BLE devices found.
+    '''
+
     print(f'Found {len(devices)} devices')
     print(f' # {"name":>20} {"RSSI":>8} {"address":>20}')
     print('-'*55)
@@ -155,6 +159,13 @@ if __name__ == '__main__':
         print(f'{index+1:2} {device.name:>20} {device.rssi:>4} dBm {device.address:>20}')
     print('-'*55)
 
+
+    
+if __name__ == '__main__':
+
+    print('Scaning BLE devices ...')
+    devices = scan_devices()
+    print_devices(devices)
     selected = int(input('Select a BLE device (0 to rescan): '))
     while selected == 0:
         devices = scan_devices()
