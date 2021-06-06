@@ -5,7 +5,7 @@ Date: 5/27/2021
 Description: Database model file.
 '''
 
-from datetime import datetime, timezone
+from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -16,9 +16,9 @@ class Sweep(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     device_name = db.Column(db.String())
     filename = db.Column(db.String)
-    sensor_time = db.Column(db.DateTime, default=None)
-    hub_time = db.Column(db.DateTime, default=None)
-    server_time = db.Column(db.DateTime)
+    sensor_time = db.Column(db.DateTime(timezone=True), default=None)
+    hub_time = db.Column(db.DateTime(timezone=True), default=None)
+    server_time = db.Column(db.DateTime(timezone=True))
     temperature = db.Column(db.Integer, default=None)
     rssi = db.Column(db.Integer, default=None)
 
@@ -27,7 +27,7 @@ class Sweep(db.Model):
         self.filename = filename
         self.sensor_time = sensor_time
         self.hub_time = hub_time
-        self.server_time = datetime.now(timezone.utc).replace(microsecond=0)
+        self.server_time = datetime.utcnow().replace(microsecond=0)
         self.temperature = temperature
         self.rssi = rssi
 
