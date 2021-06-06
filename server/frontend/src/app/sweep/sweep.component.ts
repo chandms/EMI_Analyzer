@@ -13,7 +13,7 @@ export class SweepComponent implements OnInit {
   constructor(private service: SweepService) {}
 
   ngOnInit() {
-    this.service.getSweeps()
+    this.service.getAllSweeps()
       .subscribe(Response => {
         this.sweeps = Response;
       })

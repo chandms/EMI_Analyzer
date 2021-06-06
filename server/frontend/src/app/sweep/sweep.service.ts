@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment as env } from 'src/environments/environment';
 
@@ -11,7 +11,14 @@ export class SweepService {
 
   constructor(private http: HttpClient) { }
 
-  getSweeps() {
+  getAllSweeps() {
     return this.http.get(this.url);
   }
+
+  getLatestSweep(){
+    let params = new HttpParams;
+    params = params.append('latest', 'true')
+    return this.http.get(this.url, {params})
+  }
+
 }
