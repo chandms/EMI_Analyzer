@@ -29,6 +29,7 @@ class UploadHandler(Resource):
         parser.add_argument('file', type=FileStorage, location='files', required=True)
         parser.add_argument('device_name', required=True)
         parser.add_argument('hub_time', required=True)
+        parser.add_argument('rssi')
         args = parser.parse_args()
         upload_file = args['file']
         filename = secure_filename(upload_file.filename)
@@ -36,7 +37,8 @@ class UploadHandler(Resource):
         sweep_meta = Sweep(
             filename = filename,
             device_name = args['device_name'],
-            hub_time = datetime.fromisoformat(args['hub_time'])
+            hub_time = datetime.fromisoformat(args['hub_time']),
+            rssi = args['rssi']
         )
         db.session.add(sweep_meta)
         db.session.commit()

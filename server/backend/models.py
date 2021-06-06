@@ -19,19 +19,24 @@ class Sweep(db.Model):
     sensor_time = db.Column(db.DateTime, default=None)
     hub_time = db.Column(db.DateTime, default=None)
     server_time = db.Column(db.DateTime)
+    temperature = db.Column(db.Integer, default=None)
+    rssi = db.Column(db.Integer, default=None)
 
-    def __init__(self, device_name, filename, sensor_time=None, hub_time=None):
+    def __init__(self, device_name, filename, sensor_time=None, hub_time=None, temperature=None, rssi=None):
         self.device_name = device_name
         self.filename = filename
         self.sensor_time = sensor_time
         self.hub_time = hub_time
         self.server_time = datetime.now(timezone.utc).replace(microsecond=0)
+        self.temperature = temperature
+        self.rssi = rssi
 
     def __repr__(self):
-        return f'Sweep from {self.device_name} received.'
+        return f'Sweep from {self.device_name} received at {self.server_time}.'
 
     def json(self):
         return {
             'filename': self.filename,
             'device_name': self.device_name,
+            'timestamp': self.server_time.isoformat()
         }
