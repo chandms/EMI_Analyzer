@@ -43,4 +43,4 @@ class UploadHandler(Resource):
         db.session.add(sweep_meta)
         db.session.commit()
         
-        return sweep_meta.json()
+        return sweep_meta.json(), 201

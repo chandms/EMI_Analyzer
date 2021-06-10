@@ -5,3 +5,4 @@ venv
 sweeps
 server/backend/migrations/
 .env
+server/frontend/dist
