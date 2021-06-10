@@ -27,7 +27,8 @@ class SweepAPI(Resource):
                 'device_name': sweep.device_name,
                 'hub_timestamp': sweep.hub_time.replace(tzinfo=timezone.utc).isoformat(),
                 'server_timestamp': sweep.server_time.replace(tzinfo=timezone.utc).isoformat(),
-                'rssi': sweep.rssi
+                'rssi': sweep.rssi,
+                'filename': sweep.filename
                 })
 
         return sweeps
