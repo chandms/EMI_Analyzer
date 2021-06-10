@@ -5,9 +5,9 @@ Date: 5/27/2021
 Description: Sweep database API.
 '''
 
-import json
 from flask_restful  import Resource, reqparse
 from models import db, Sweep
+from datetime import timezone
 
 class SweepAPI(Resource):
 
@@ -25,8 +25,8 @@ class SweepAPI(Resource):
             sweeps.append({
                 'id': sweep.id,
                 'device_name': sweep.device_name,
-                'hub_timestamp': sweep.hub_time.replace(microsecond=0).isoformat(),
-                'server_timestamp': sweep.server_time.replace(microsecond=0).isoformat(),
+                'hub_timestamp': sweep.hub_time.replace(tzinfo=timezone.utc).isoformat(),
+                'server_timestamp': sweep.server_time.replace(tzinfo=timezone.utc).isoformat(),
                 'rssi': sweep.rssi
                 })
 
