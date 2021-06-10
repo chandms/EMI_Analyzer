@@ -12,8 +12,8 @@
         <tbody>
             <tr *ngFor="let sweep of sweeps">
                 <td>{{ sweep.device_name }}</td>
-                <td>{{ sweep.hub_timestamp }}</td>
-                <td>{{ sweep.server_timestamp }}</td>
+                <td>{{ sweep.hub_timestamp | date: 'long' }}</td>
+                <td>{{ sweep.server_timestamp | date: 'long' }}</td>
                 <td>{{ sweep.rssi }}</td>
             </tr>
         </tbody>

@@ -1,4 +1,10 @@
-import { HttpClient } from '@angular/common/http';
+/*
+Author: Thirawat Bureetes
+Email: tbureete@purdue.edu
+Date: 06/10/2021
+Description: This component displays all avialable sweeps in the table.
+*/
+
 import { Component, OnInit } from '@angular/core';
 import { SweepService } from './sweep.service';
 
@@ -16,6 +22,18 @@ export class SweepComponent implements OnInit {
     this.service.getAllSweeps()
       .subscribe(Response => {
         this.sweeps = Response;
+        this.sweeps.forEach((sweep: Sweep) => {
+          sweep.hub_timestamp = new Date(sweep.hub_timestamp);
+          sweep.server_timestamp = new Date(sweep.server_timestamp);
+        });
       })
   }
+}
+
+export interface Sweep {
+  id: number;
+  device_name: string;
+  hub_timestamp: Date;
+  server_timestamp: Date;
+  rssi: number;
 }
