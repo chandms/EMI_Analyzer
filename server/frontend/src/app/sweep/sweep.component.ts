@@ -7,6 +7,7 @@ Description: This component displays all avialable sweeps in the table.
 
 import { Component, OnInit } from '@angular/core';
 import { SweepService } from './sweep.service';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'sweep',
@@ -28,6 +29,13 @@ export class SweepComponent implements OnInit {
         });
       })
   }
+
+  download(sweep: Sweep) {
+    this.service.downloadSweep(sweep.id)
+    .subscribe( Response => {
+      saveAs(Response, sweep.filename);
+    });
+  }
 }
 
 export interface Sweep {
@@ -36,4 +44,5 @@ export interface Sweep {
   hub_timestamp: Date;
   server_timestamp: Date;
   rssi: number;
+  filename: string;
 }

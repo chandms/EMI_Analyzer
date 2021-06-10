@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  sweep_url: 'http://10.165.76.237:5000/sweep'
+  backend_url: 'http://10.165.76.237:5000'
 };
 
 /*

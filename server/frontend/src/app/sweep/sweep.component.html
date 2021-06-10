@@ -7,6 +7,7 @@
                 <th>Sensor Hub Timestamp</th>
                 <th>Server Timestamp</th>
                 <th>RSSI</th>
+                <th class="center">Download</th>
             </tr>
         </thead>
         <tbody>
@@ -15,6 +16,9 @@
                 <td>{{ sweep.hub_timestamp | date: 'medium' }}</td>
                 <td>{{ sweep.server_timestamp | date: 'medium' }}</td>
                 <td>{{ sweep.rssi }}</td>
+                <td class="center">
+                    <i (click)="download(sweep)" class="bi bi-cloud-download" style="cursor: pointer;"></i>
+                </td>
             </tr>
         </tbody>
     </table>
