@@ -31,7 +31,7 @@ class Sweep(db.Model):
         self.rssi = rssi
 
     def __repr__(self):
-        return f'Sweep received at {self.server_time}'
+        return f'Sweep from {self.device.name} received at {self.server_time}'
 
     def json(self):
         return {

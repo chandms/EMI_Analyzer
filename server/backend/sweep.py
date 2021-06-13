@@ -6,7 +6,7 @@ Description: Sweep database API.
 '''
 
 from flask_restful  import Resource, reqparse
-from models import db, Sweep, Device
+from models import Sweep, Device
 from datetime import timezone
 
 class SweepAPI(Resource):
@@ -16,9 +16,12 @@ class SweepAPI(Resource):
         parser.add_argument('latest')
         args = parser.parse_args()
         sweeps = []
-        
+
         if args['latest'] is not None:
-            sweep_query = db.session.query(Sweep).all()
+            device_query = Device.query.order_by(Device.last_updated.desc()).all()
+            sweep_query = []
+            for device in device_query:
+                sweep_query.append(Sweep.query.filter_by(device_id=device.id).order_by(Sweep.server_time.desc()).first())            
 
         else:
             sweep_query = Sweep.query.order_by(Sweep.server_time.desc()).all()
