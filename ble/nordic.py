@@ -5,7 +5,6 @@ Date: 6/03/2021
 Description: Library for Nordic ralated.
 '''
 
-from logging import warning
 import yaml
 from pandas import DataFrame
 from pathlib import Path
@@ -27,12 +26,14 @@ def save_sweep(meta_data: MetaData, sweeps: list) -> None:
     '''
     sweep_df = DataFrame.from_dict(sweeps)
     path = Path(configs['sweep_path'])
-    filename = path / f'{meta_data.device_name}-{datetime.now(timezone.utc).replace(microsecond=0).isoformat()[:-6]}.csv'
+    timestamp = datetime.now(timezone.utc).replace(microsecond=0).isoformat()[:-6]
+    filename = path / f'{meta_data.device_name}-{timestamp}.csv'
     sweep_df.to_csv(filename, index=False)
+    meta_data.hub_timestamp = timestamp
     logger.info(f'Recorded sweeps into {filename}.')
     uri = configs['upload_uri'][configs['env']]
     r = upload_sweep(filename, uri, meta_data)
-    if r.status_code == 200:
+    if r.status_code == 201:
         logger.info(f'Uploaded to {uri} completed.')
     else:
-        logger.critical(f'Uploaded to {uri} failed.')
+        logger.warning(f'Uploaded to {uri} failed.')

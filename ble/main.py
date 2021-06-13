@@ -43,7 +43,7 @@ async def connect(device: BLEDevice) -> BleakClient:
         raiseExceptions(asyncio.TimeoutError)
 
     except Exception as e:
-        logger.critical(f'Unknown error occured when connecting to {device.name} ({device.address}). {e}')
+        logger.error(f'Unknown error occured when connecting to {device.name} ({device.address}). {e}')
 
 async def automate(device: BLEDevice):
     '''
@@ -52,21 +52,24 @@ async def automate(device: BLEDevice):
     
     try:
         connection = await asyncio.wait_for(connect(device), timeout=15)
+        logger.info(f'Connected to {device.name} ({device.address}).')
         meta_data, sweep = await asyncio.wait_for(transfer_data(connection), timeout=15)
         meta_data.rssi = device.rssi
         meta_data.device_name = device.name
+        meta_data.mac_addres = device.address
         save_sweep(meta_data, sweep)
+        
 
     except asyncio.TimeoutError:
-        logger.critical('Timeout! Something went wrong.')
+        logger.error('Timeout! Something went wrong.')
 
     except Exception as e:
-        logger.critical(f'Unknown error occured when transfering data from {device.name} ({device.address}). {e}')
+        logger.error(f'Unknown error occured when transfering data from {device.name} ({device.address}). {e}')
     
     finally:
-        logger.info(f'Disconnecting from {device.name} ({device.address}).')
-        await connection.disconnect()
-    
+        if connection.is_connected:
+            logger.info(f'Disconnecting from {device.name} ({device.address}).')
+            await connection.disconnect()
 
 if __name__ == '__main__':
     with open('config.yaml') as f:
