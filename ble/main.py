@@ -51,9 +51,10 @@ async def automate(device: BLEDevice):
     '''
     
     try:
-        connection = await asyncio.wait_for(connect(device), timeout=15)
+        connection = await asyncio.wait_for(connect(device), timeout=30)
+        time.sleep(1)
         logger.info(f'Connected to {device.name} ({device.address}).')
-        meta_data, sweep = await asyncio.wait_for(transfer_data(connection), timeout=15)
+        meta_data, sweep = await asyncio.wait_for(transfer_data(connection), timeout=30)
         meta_data.rssi = device.rssi
         meta_data.device_name = device.name
         meta_data.mac_addres = device.address
