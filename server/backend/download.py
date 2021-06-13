@@ -10,6 +10,7 @@ from flask import send_file
 from flask_restful  import Resource, reqparse
 from pathlib import Path
 from models import Sweep
+from log import logger
 
 with open('config.yaml') as f:
     configs = yaml.load(f, Loader=yaml.FullLoader)
@@ -21,9 +22,13 @@ class DownloadHandler(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('id')
         args = parser.parse_args()
-        sweep = Sweep.query.filter(Sweep.id == args['id']).first()
+        sweep_id = args['id']
+        sweep = Sweep.query.filter(Sweep.id == sweep_id).first()
+        logger.info(f'Request for sweep id {sweep_id}.')
         if sweep is not None:
             filepath = path / sweep.filename
             return send_file(filepath, as_attachment=True)
         
-        else: {'message': 'file is not found'}
+        else: 
+            logger.error(f'sweep id {sweep_id} is not found.')
+            return {'message': f'sweep id {sweep_id} is not found'}, 400

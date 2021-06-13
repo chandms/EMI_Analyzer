@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 from pathlib import Path
 from models import db, Sweep, Device
+from log import logger
 
 
 
@@ -38,7 +39,7 @@ class UploadHandler(Resource):
         device = Device.query.filter_by(name=args['device_name'],
                                         mac_address = args['mac_address']).first()
         if device is None:
-            print(f'Device is not found. Creating a new one.')
+            logger.info(f'Device is not found. Creating a new one.')
             device = Device(
                 name = args['device_name'],
                 mac_address = args['mac_address'],
@@ -47,7 +48,7 @@ class UploadHandler(Resource):
             db.session.add(device)
 
         else:
-            print(f'{device} found.')
+            logger.info(f'{device} found.')
             device.last_updated = args['hub_time']
         
         # save file
@@ -61,7 +62,7 @@ class UploadHandler(Resource):
         )
         device.sweeps.append(sweep_meta)
         db.session.add(sweep_meta)
-
+        logger.info(f'{sweep_meta} recorded into database.')
         db.session.commit()
       
         return sweep_meta.json(), 201
