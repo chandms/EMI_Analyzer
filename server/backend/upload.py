@@ -11,7 +11,7 @@ from flask_restful  import Resource, reqparse
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
 from pathlib import Path
-from models import db, Sweep
+from models import db, Sweep, Device
 
 
 
@@ -29,8 +29,11 @@ class UploadHandler(Resource):
         parser.add_argument('file', type=FileStorage, location='files', required=True)
         parser.add_argument('device_name', required=True)
         parser.add_argument('hub_time', required=True)
+        parser.add_argument('sensor_time')
+        parser.add_argument('mac_address')
         parser.add_argument('rssi')
         args = parser.parse_args()
+        # save file
         upload_file = args['file']
         filename = secure_filename(upload_file.filename)
         upload_file.save(path / filename)
@@ -41,6 +44,18 @@ class UploadHandler(Resource):
             rssi = args['rssi']
         )
         db.session.add(sweep_meta)
+        # check if the device is already in the database or not
+        device = Device.query.filter_by(device_name=args['device_name']).first()
+        if device is None:
+            new_device = Device(
+                device_name = args['device_name'],
+                mac_address = args['mac_address'],
+                timestamp = args['hub_time']
+            )
+            db.session.add(new_device)
+        else:
+            device.last_updated = args['hub_time']
+
         db.session.commit()
         
         return sweep_meta.json(), 201

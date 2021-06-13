@@ -40,3 +40,26 @@ class Sweep(db.Model):
             'device_name': self.device_name,
             'timestamp': self.server_time.isoformat()
         }
+
+class Device(db.Model):
+    __tablename__ = 'devices'
+
+    id = db.Column(db.Integer, primary_key=True)
+    device_name = db.Column(db.String())
+    mac_address = db.Column(db.String())
+    last_updated = db.Column(db.DateTime(timezone=True))
+
+    def __init__(self, device_name, timestamp, mac_address=None) -> None:
+        self.device_name = device_name
+        self.mac_address = mac_address
+        self.last_updated = timestamp
+
+    def __repr__(self) -> str:
+        return f'Device {self.device_name} last update at {self.last_updated}.'
+
+    def json(self):
+        return {
+            'device_name': self.device_name,
+            'mac_address': self.mac_address,
+            'last_updated': self.last_updated
+        }
