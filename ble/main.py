@@ -16,12 +16,12 @@ from connect import scan_devices, transfer_data
 from nordic import save_sweep
 from log import logger
 
-def detect_device() -> BLEDevice:
+def detect_device(scan_duration:int) -> BLEDevice:
     '''
         Scan all devices. Try to detect the proper device. Otherwise, return None.
     '''
     logger.info('Scanning devices.')
-    devices = scan_devices()
+    devices = scan_devices(scan_duration)
     for device in devices:
         if re.match(r'(EMI)', device.name):
             return device
@@ -77,11 +77,10 @@ if __name__ == '__main__':
         configs = yaml.load(f, Loader=yaml.FullLoader)
 
     while True:
-        device = detect_device()
+        device = detect_device(configs['scan_duration'])
         if device is not None:
             asyncio.run(automate(device))
         else:
             sleep_duration = configs['sleep_duration']
-            logger.info(f'No devices found. Go to sleep for {sleep_duration} seconds')
             time.sleep(sleep_duration)
         

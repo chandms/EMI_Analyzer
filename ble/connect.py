@@ -87,11 +87,11 @@ async def scan(time:int=5):
     devices = await BleakScanner.discover(time)
     return devices
 
-def scan_devices():
+def scan_devices(scan_duration:int):
     '''
         Acticate Bleak scaner coroutine. Return a list of devices back.
     '''
-    devices = asyncio.run(scan())
+    devices = asyncio.run(scan(scan_duration))
     return devices
 
 async def connect(device: BLEDevice):

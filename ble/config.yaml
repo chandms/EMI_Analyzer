@@ -1,4 +1,4 @@
-env: 'debug'
+env: 'qa'
 
 upload_uri:
   debug: 'http://10.165.76.237:5000/upload'
@@ -8,4 +8,5 @@ upload_uri:
 
 sweep_path: '/srv/sweeps'
 
-sleep_duration: 60
+sleep_duration: 0
+scan_duration: 5
