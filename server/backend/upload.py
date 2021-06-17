@@ -49,7 +49,8 @@ class UploadHandler(Resource):
 
         else:
             logger.info(f'{device} found.')
-            device.last_updated = args['hub_time']
+            if device.last_updated < args['hub_time']:
+                device.last_updated = args['hub_time']
         
         # save file
         upload_file = args['file']

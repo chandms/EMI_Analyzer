@@ -47,6 +47,8 @@ class Device(db.Model):
     name = db.Column(db.String())
     mac_address = db.Column(db.String())
     last_updated = db.Column(db.DateTime(timezone=True))
+    longitude = db.Column(db.Float)
+    latitude = db.Column(db.Float)
     sweeps = db.relationship('Sweep', backref='device')
 
     def __init__(self, name, timestamp, mac_address=None) -> None:
