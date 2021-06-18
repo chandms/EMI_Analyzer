@@ -6,7 +6,7 @@ Description: API for manage sweep uploading.
 '''
 
 import yaml
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_restful  import Resource, reqparse
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
@@ -34,6 +34,7 @@ class UploadHandler(Resource):
         parser.add_argument('sensor_time')
         parser.add_argument('rssi')
         args = parser.parse_args()
+        hubtime = datetime.fromisoformat(args['hub_time']).replace(tzinfo=timezone.utc)
         
         # check if the device is already in the database or not
         device = Device.query.filter_by(name=args['device_name'],
@@ -43,14 +44,15 @@ class UploadHandler(Resource):
             device = Device(
                 name = args['device_name'],
                 mac_address = args['mac_address'],
-                timestamp = args['hub_time']
+                timestamp = hubtime
             )
             db.session.add(device)
 
         else:
             logger.info(f'{device} found.')
-            if device.last_updated < args['hub_time']:
-                device.last_updated = args['hub_time']
+            print(hubtime)
+            if device.last_updated < hubtime:
+                device.last_updated = hubtime
         
         # save file
         upload_file = args['file']
@@ -58,7 +60,7 @@ class UploadHandler(Resource):
         upload_file.save(path / filename)
         sweep_meta = Sweep(
             filename = filename,
-            hub_time = datetime.fromisoformat(args['hub_time']),
+            hub_time = hubtime,
             rssi = args['rssi']
         )
         device.sweeps.append(sweep_meta)

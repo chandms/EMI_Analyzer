@@ -21,10 +21,10 @@ class SweepAPI(Resource):
             device_query = Device.query.order_by(Device.last_updated.desc()).all()
             sweep_query = []
             for device in device_query:
-                sweep_query.append(Sweep.query.filter_by(device_id=device.id).order_by(Sweep.server_time.desc()).first())            
+                sweep_query.append(Sweep.query.filter_by(device_id=device.id).order_by(Sweep.hub_time.desc()).first())            
 
         else:
-            sweep_query = Sweep.query.order_by(Sweep.server_time.desc()).all()
+            sweep_query = Sweep.query.order_by(Sweep.hub_time.desc()).all()
 
         for sweep in sweep_query:
             sweeps.append({
