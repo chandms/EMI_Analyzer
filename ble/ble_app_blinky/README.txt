@@ -1,1 +1,0 @@
-Test with S140 + nRF52840 DK
