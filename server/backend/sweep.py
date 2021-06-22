@@ -14,10 +14,17 @@ class SweepAPI(Resource):
     def get(self):
         parser = reqparse.RequestParser()
         parser.add_argument('latest')
+        parser.add_argument('device_name')
         args = parser.parse_args()
         sweeps = []
 
-        if args['latest'] is not None:
+        if args['device_name'] is not None:
+            device_name = args['device_name']
+            device_query = Device.query.filter_by(name=device_name).first()
+            sweep_query = Sweep.query.filter_by(device_id=device_query.id).order_by(Sweep.hub_time.desc()).all()
+
+
+        elif args['latest'] is not None:
             device_query = Device.query.order_by(Device.last_updated.desc()).all()
             sweep_query = []
             for device in device_query:
