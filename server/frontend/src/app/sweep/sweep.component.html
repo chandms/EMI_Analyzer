@@ -19,12 +19,12 @@
         </thead>
         <tbody>
             <tr *ngFor="let sweep of sweeps">
-                <td>{{ sweep.device_name }}</td>
+                <td [routerLink]="['/device', sweep.device_name]" class="clickable">{{ sweep.device_name }}</td>
                 <td>{{ sweep.hub_timestamp | date: 'medium' }}</td>
                 <td>{{ sweep.server_timestamp | date: 'medium' }}</td>
                 <td>{{ sweep.rssi }}</td>
                 <td class="center">
-                    <i (click)="download(sweep)" class="bi bi-cloud-download" style="cursor: pointer;"></i>
+                    <i (click)="download(sweep)" class="bi bi-cloud-download clickable"></i>
                 </td>
             </tr>
         </tbody>

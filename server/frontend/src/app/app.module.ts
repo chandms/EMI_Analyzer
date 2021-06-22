@@ -29,7 +29,7 @@ import { DeviceComponent } from './device/device.component';
         component: SweepComponent
       },
       {
-        path: 'device',
+        path: 'device/:device_name',
         component: DeviceComponent
       }
     ])

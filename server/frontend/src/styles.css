@@ -3,4 +3,8 @@
 @import "~bootstrap-icons/font/bootstrap-icons.css";
 
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body { margin: 20; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.clickable {
+    cursor: pointer
+}
