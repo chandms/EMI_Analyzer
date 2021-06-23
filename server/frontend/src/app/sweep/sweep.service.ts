@@ -39,7 +39,7 @@ export class SweepService {
   getDeviceSweeps(device_name: string){
     let params = new HttpParams;
     params = params.append('device_name', device_name);
-    return this.http.get<Sweep[]>(this.sweep_url);
+    return this.http.get<Sweep[]>(this.sweep_url, {params});
   }
 
   downloadSweep(sweepID: number): Observable<Blob> {
