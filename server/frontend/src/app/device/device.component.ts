@@ -1,5 +1,14 @@
+/*
+Author: Thirawat Bureetes
+Email: tbureete@purdue.edu
+Date: 06/22/2021
+Description: This component displays all sweeps for a certain device in the table.
+*/
+
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { SweepService } from '../sweep/sweep.service';
+import { Sweep } from './../sweep/sweep.component';
 
 @Component({
   selector: 'app-device',
@@ -8,13 +17,23 @@ import { ActivatedRoute } from '@angular/router';
 })
 export class DeviceComponent implements OnInit {
 
-  constructor(private route: ActivatedRoute) { }
+  sweeps: Sweep[] = [];
+
+  constructor(private route: ActivatedRoute, private service: SweepService) { }
 
   ngOnInit(): void {
-    this.route.paramMap
-      .subscribe(params => {
-        console.log(params.get('device_name'));
+    let device_name = this.route.snapshot.params.device_name;
+    this.service.getDeviceSweeps(device_name)
+      .subscribe(Response => {
+        this.sweeps = Response;
       })
+  }
+
+  download(sweep: Sweep) {
+    this.service.downloadSweep(sweep.id)
+    .subscribe( Response => {
+      saveAs(Response, sweep.filename);
+    });
   }
 
 }
