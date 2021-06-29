@@ -34,8 +34,8 @@ class UploadHandler(Resource):
         parser.add_argument('sensor_time')
         parser.add_argument('rssi')
         args = parser.parse_args()
-        hubtime = datetime.fromisoformat(args['hub_time']).replace(tzinfo=timezone.utc)
-        
+        hubtime = datetime.fromisoformat(args['hub_time'])
+        print(hubtime)
         # check if the device is already in the database or not
         device = Device.query.filter_by(name=args['device_name'],
                                         mac_address = args['mac_address']).first()
@@ -50,7 +50,6 @@ class UploadHandler(Resource):
 
         else:
             logger.info(f'{device} found.')
-            print(hubtime)
             if device.last_updated < hubtime:
                 device.last_updated = hubtime
         
