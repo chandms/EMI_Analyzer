@@ -11,19 +11,20 @@ import { SweepService } from '../sweep/sweep.service';
 import { Sweep } from './../sweep/sweep.component';
 
 @Component({
-  selector: 'app-device',
+  selector: 'device',
   templateUrl: './device.component.html',
   styleUrls: ['./device.component.css']
 })
 export class DeviceComponent implements OnInit {
 
   sweeps: Sweep[] = [];
+  device_name: string = '';
 
   constructor(private route: ActivatedRoute, private service: SweepService) { }
 
   ngOnInit(): void {
-    let device_name = this.route.snapshot.params.device_name;
-    this.service.getDeviceSweeps(device_name)
+    this.device_name = this.route.snapshot.params.device_name;
+    this.service.getDeviceSweeps(this.device_name)
       .subscribe(Response => {
         this.sweeps = Response;
       })

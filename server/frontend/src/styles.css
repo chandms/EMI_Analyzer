@@ -8,3 +8,19 @@ body { margin: 20; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .clickable {
     cursor: pointer
 }
+
+.center {
+    text-align: center
+  }
+
+label {
+text-align: center;
+text-decoration: none;
+vertical-align: middle;
+font-size: 1rem;
+margin-right: 10px;
+}
+
+input {
+  margin-right: 10px;
+}

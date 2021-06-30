@@ -1,0 +1,47 @@
+<div class="container" style="margin-top: 20px;">
+    <div>
+        <button class="btn btn-dark clickable" [routerLink]="['/device', device_name]" style="margin-right: 20px;">
+            <i class="bi bi-backspace" style="margin-right: 10px;"></i>Back
+        </button>
+    </div>
+
+    <div style="margin-top: 20px;">
+        <label for="latitudeInput">Latitude</label> 
+        <input type="number" 
+               [(ngModel)]="latitude" 
+               #latitudeInput="ngModel" 
+               id="latitudeInput" 
+               name="latitudeInput" 
+               min="-90" 
+               max="90" 
+               style="width: 120px;"
+               required>
+
+        <label for="longitudeInput">Longitude</label> 
+        <input type="number" 
+               [(ngModel)]="longitude" 
+               #longitudeInput="ngModel"
+               id="longitudeInput" 
+               name="longitudeInput" 
+               min="-180" 
+               max="180" 
+               style="width: 120px;"
+               required>
+
+        <button class="btn btn-primary" 
+                (click)="changeLocation()" 
+                [disabled]="latitudeInput.invalid || longitudeInput.invalid">
+                Apply Change
+        </button>
+    </div> 
+
+    <div style="margin-top: 20px;" class="alert alert-danger" *ngIf="latitudeInput.invalid">
+        Latitude must be beween -90 to 90.
+    </div>
+    <div class="alert alert-danger" *ngIf="longitudeInput.invalid">
+        Longitude must be beween -180 to 180.
+    </div>
+
+    <div class="map" id="device_map" style="margin-top: 20px;"></div>
+
+</div>

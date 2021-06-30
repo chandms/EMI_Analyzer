@@ -10,12 +10,14 @@ import { SweepComponent } from './sweep/sweep.component';
 import { SweepService } from './sweep/sweep.service';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DeviceComponent } from './device/device.component';
+import { LocationComponent } from './location/location.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     SweepComponent,
-    DeviceComponent
+    DeviceComponent,
+    LocationComponent
   ],
   imports: [
     BrowserModule,
@@ -31,6 +33,10 @@ import { DeviceComponent } from './device/device.component';
       {
         path: 'device/:device_name',
         component: DeviceComponent
+      },
+      {
+        path: 'location/:device_name',
+        component: LocationComponent
       }
     ])
   ],
