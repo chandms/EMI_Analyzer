@@ -26,7 +26,7 @@ class Sweep(db.Model):
         self.filename = filename
         self.sensor_time = sensor_time
         self.hub_time = hub_time
-        self.server_time = datetime.utcnow().replace(microsecond=0)
+        self.server_time = datetime.now().replace(microsecond=0)
         self.temperature = temperature
         self.rssi = rssi
 
