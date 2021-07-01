@@ -15,7 +15,7 @@
                 <th>Device Name</th>
                 <th>Sensor Hub Timestamp</th>
                 <th>Server Timestamp</th>
-                <th>RSSI</th>
+                <th class="center">RSSI</th>
                 <th class="center">Download</th>
             </tr>
         </thead>
@@ -24,7 +24,7 @@
                 <td>{{ sweep.device_name }}</td>
                 <td>{{ sweep.hub_timestamp | date: 'medium' }}</td>
                 <td>{{ sweep.server_timestamp | date: 'medium' }}</td>
-                <td>{{ sweep.rssi }}</td>
+                <td class="center">{{ sweep.rssi }}</td>
                 <td class="center">
                     <i (click)="download(sweep)" class="bi bi-cloud-download clickable"></i>
                 </td>
