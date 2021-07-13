@@ -10,7 +10,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment as env } from 'src/environments/environment';
-import { Sweep } from './sweep.component';
+import { Sweep } from '../sweep/sweep.component';
 
 @Injectable({
   providedIn: 'root'

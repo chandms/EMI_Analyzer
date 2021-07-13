@@ -7,9 +7,10 @@ import { RouterModule } from '@angular/router';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { SweepComponent } from './sweep/sweep.component';
-import { SweepService } from './sweep/sweep.service';
+import { SweepService } from './service/sweep.service';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DeviceComponent } from './device/device.component';
+import { DeviceService } from './service/device.service';
 import { LocationComponent } from './location/location.component';
 
 @NgModule({
@@ -41,7 +42,8 @@ import { LocationComponent } from './location/location.component';
     ])
   ],
   providers: [
-    SweepService
+    SweepService,
+    DeviceService
   ],
   bootstrap: [AppComponent]
 })

@@ -6,7 +6,7 @@ Description: This component displays all avialable sweeps in the table.
 */
 
 import { Component, OnInit } from '@angular/core';
-import { SweepService } from './sweep.service';
+import { SweepService } from '../service/sweep.service';
 import { saveAs } from 'file-saver';
 
 @Component({

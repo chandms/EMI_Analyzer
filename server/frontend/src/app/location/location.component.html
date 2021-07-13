@@ -44,4 +44,9 @@
 
     <div class="map" id="device_map" style="margin-top: 20px;"></div>
 
+    <div style="text-align: right; margin-top: 20px;">
+        <p>Location for {{ device_name }} </p>
+        <p>Last seen: {{ last_update | date: 'medium' }}</p>
+    </div>
+
 </div>

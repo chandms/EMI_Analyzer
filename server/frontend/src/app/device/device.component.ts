@@ -7,7 +7,7 @@ Description: This component displays all sweeps for a certain device in the tabl
 
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { SweepService } from '../sweep/sweep.service';
+import { SweepService } from '../service/sweep.service';
 import { Sweep } from './../sweep/sweep.component';
 
 @Component({
@@ -37,4 +37,13 @@ export class DeviceComponent implements OnInit {
     });
   }
 
+}
+
+export interface Device {
+  device_id: number;
+  device_name: string;
+  mac_address: string;
+  last_updated: Date;
+  longitude: number;
+  latitude: number;
 }
