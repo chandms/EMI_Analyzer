@@ -61,7 +61,10 @@ class Device(db.Model):
 
     def json(self):
         return {
+            'device_id': self.id,
             'device_name': self.name,
             'mac_address': self.mac_address,
-            'last_updated': self.last_updated
+            'last_updated': self.last_updated.isoformat(),
+            'longitude': self.longitude,
+            'latitude': self.latitude
         }

@@ -7,7 +7,6 @@ Description: Sweep database API.
 
 from flask_restful  import Resource, reqparse
 from models import Sweep, Device
-from datetime import timezone
 
 class SweepAPI(Resource):
 

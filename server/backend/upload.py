@@ -6,7 +6,7 @@ Description: API for manage sweep uploading.
 '''
 
 import yaml
-from datetime import datetime, timezone
+from datetime import datetime
 from flask_restful  import Resource, reqparse
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
