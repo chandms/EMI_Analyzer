@@ -13,7 +13,7 @@ class DeviceAPI(Resource):
 
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('device_name', required=True)
+        parser.add_argument('device_name')
         args = parser.parse_args()
 
         if args['device_name'] is not None:
@@ -27,6 +27,14 @@ class DeviceAPI(Resource):
                 return {
                     'message': f'device {device_name} is not found.'
                 }, 400
+        
+        else:
+            devices = []
+            device_query = Device.query.order_by(Device.last_updated.desc()).all()
+            for device in device_query:
+                devices.append(device.json())
+            
+            return devices
 
     def post(self):
         parser = reqparse.RequestParser()
