@@ -41,12 +41,17 @@
     <div class="alert alert-danger" *ngIf="longitudeInput.invalid">
         Longitude must be beween -180 to 180.
     </div>
-
-    <div class="map" id="device_map" style="margin-top: 20px;"></div>
-
-    <div style="text-align: right; margin-top: 20px;">
-        <p>Location for {{ device_name }} </p>
-        <p>Last seen: {{ last_update | date: 'medium' }}</p>
+    <div *ngIf="!map_valid">
+        <h3 style="color: red;">There is no location information of {{ device_name }} found. Please update the location information.</h3>
     </div>
+    <div>
+        <div class="map" id="device_map" style="margin-top: 20px;" ></div>
+
+        <div style="text-align: right; margin-top: 20px;">
+            <p>Location for {{ device_name }} </p>
+            <p>Last seen: {{ last_update | date: 'medium' }}</p>
+        </div>
+    </div>
+    
 
 </div>

@@ -24,10 +24,11 @@ export class LocationComponent implements OnInit {
 
   device_name: string = '';
   device_id: number = 0;
-  latitude: number = 40.421488;
-  longitude: number = -86.916631;
+  latitude: number = 0;
+  longitude: number = 0;
   mac_address: string = '';
   last_update: Date = new Date();
+  map_valid: boolean = true;
   
   marker = new Feature({
     geometry: new Point(fromLonLat([this.longitude, this.latitude]))
@@ -49,9 +50,11 @@ export class LocationComponent implements OnInit {
         this.longitude = Response.longitude;
         this.latitude = Response.latitude;
         if ((this.latitude == null) || (this.longitude == null)) {
-         this.latitude = 40.421488;
-         this.longitude = -86.916631;
+         this.map_valid = false;
+         this.longitude = 0;
+         this.latitude = 0;
         }
+        
         let new_position = fromLonLat([this.longitude, this.latitude]);
         this.map.getView().setCenter(new_position);
         this.marker.setGeometry(new Point(new_position));
