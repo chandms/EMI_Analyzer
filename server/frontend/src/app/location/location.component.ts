@@ -9,6 +9,7 @@ import Feature from 'ol/Feature';
 import { Point } from 'ol/geom';
 import { fromLonLat } from 'ol/proj';
 import { Vector } from 'ol/layer';
+
 import { DeviceService } from '../service/device.service';
 
 
@@ -37,13 +38,12 @@ export class LocationComponent implements OnInit {
   });
 
   map!: Map;
-  zoom: number = 15;
+  zoom: number = 10;
 
   ngOnInit(): void {
     this.device_name = this.route.snapshot.params.device_name;
     this.service.getDeviceInfo(this.device_name)
       .subscribe(Response => {
-        console.log(Response);
         this.device_id = Response.device_id
         this.last_update = Response.last_updated;
         this.longitude = Response.longitude;
@@ -69,9 +69,7 @@ export class LocationComponent implements OnInit {
         })
       });
       
-      this.map.addLayer(this.layer);
-      
-
+      this.map.addLayer(this.layer);    
   }
 
   changeLocation() {

@@ -25,6 +25,10 @@ export class DeviceService {
     return this.http.get<Device>(this.url, {params: params});
   }
 
+  allDeviceInfo(){
+    return this.http.get<Device[]>(this.url);
+  }
+
   updateLocation(
     device_id: number,
     latitude: number,

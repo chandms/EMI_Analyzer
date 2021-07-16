@@ -12,13 +12,15 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { DeviceComponent } from './device/device.component';
 import { DeviceService } from './service/device.service';
 import { LocationComponent } from './location/location.component';
+import { MapAllComponent } from './map-all/map-all.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     SweepComponent,
     DeviceComponent,
-    LocationComponent
+    LocationComponent,
+    MapAllComponent
   ],
   imports: [
     BrowserModule,
