@@ -3,6 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
+import { ChartsModule } from 'ng2-charts';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -13,6 +14,7 @@ import { DeviceComponent } from './device/device.component';
 import { DeviceService } from './service/device.service';
 import { LocationComponent } from './location/location.component';
 import { MapAllComponent } from './map-all/map-all.component';
+import { StrengthChartComponent } from './strength-chart/strength-chart.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +22,8 @@ import { MapAllComponent } from './map-all/map-all.component';
     SweepComponent,
     DeviceComponent,
     LocationComponent,
-    MapAllComponent
+    MapAllComponent,
+    StrengthChartComponent
   ],
   imports: [
     BrowserModule,
@@ -28,6 +31,7 @@ import { MapAllComponent } from './map-all/map-all.component';
     AppRoutingModule,
     HttpClientModule,
     BrowserAnimationsModule,
+    ChartsModule,
     RouterModule.forRoot([
       {
         path: '',
