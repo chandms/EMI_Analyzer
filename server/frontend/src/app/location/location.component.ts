@@ -22,13 +22,13 @@ export class LocationComponent implements OnInit {
 
   constructor(private route: ActivatedRoute, private service: DeviceService) { }
 
-  device_name: string = '';
-  device_id: number = 0;
+  deviceName: string = '';
+  deviceID: number = 0;
   latitude: number = 0;
   longitude: number = 0;
-  mac_address: string = '';
-  last_update: Date = new Date();
-  map_valid: boolean = true;
+  macAddress: string = '';
+  lastUpdate: Date = new Date();
+  mapValid: boolean = true;
   
   marker = new Feature({
     geometry: new Point(fromLonLat([this.longitude, this.latitude]))
@@ -42,27 +42,27 @@ export class LocationComponent implements OnInit {
   zoom: number = 10;
 
   ngOnInit(): void {
-    this.device_name = this.route.snapshot.params.device_name;
-    this.service.getDeviceInfo(this.device_name)
+    this.deviceName = this.route.snapshot.params.deviceName;
+    this.service.getDeviceInfo(this.deviceName)
       .subscribe(Response => {
-        this.device_id = Response.device_id
-        this.last_update = Response.last_updated;
+        this.deviceID = Response.device_id
+        this.lastUpdate = Response.last_updated;
         this.longitude = Response.longitude;
         this.latitude = Response.latitude;
         if ((this.latitude == null) || (this.longitude == null)) {
-         this.map_valid = false;
+         this.mapValid = false;
          this.longitude = 0;
          this.latitude = 0;
         }
         
-        let new_position = fromLonLat([this.longitude, this.latitude]);
-        this.map.getView().setCenter(new_position);
-        this.marker.setGeometry(new Point(new_position));
+        let newPosition = fromLonLat([this.longitude, this.latitude]);
+        this.map.getView().setCenter(newPosition);
+        this.marker.setGeometry(new Point(newPosition));
       })
     
       let position = fromLonLat([this.longitude, this.latitude]);
       this.map = new Map({
-        target: 'device_map',
+        target: 'deviceMap',
         layers: [
           new TileLayer({source: new olsource.OSM()})
         ],
@@ -76,10 +76,10 @@ export class LocationComponent implements OnInit {
   }
 
   changeLocation() {
-    let new_position = fromLonLat([this.longitude, this.latitude]);
-    this.map.getView().setCenter(new_position);
-    this.marker.setGeometry(new Point(new_position));
-    this.service.updateLocation(this.device_id, this.latitude, this.longitude)
+    let newPosition = fromLonLat([this.longitude, this.latitude]);
+    this.map.getView().setCenter(newPosition);
+    this.marker.setGeometry(new Point(newPosition));
+    this.service.updateLocation(this.deviceID, this.latitude, this.longitude)
       .subscribe(Response => {
         console.log(Response);
       });

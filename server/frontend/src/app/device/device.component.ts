@@ -7,6 +7,7 @@ Description: This component displays all sweeps for a certain device in the tabl
 
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { Label } from 'ng2-charts';
 import { SweepService } from '../service/sweep.service';
 import { Sweep } from './../sweep/sweep.component';
 
@@ -18,15 +19,23 @@ import { Sweep } from './../sweep/sweep.component';
 export class DeviceComponent implements OnInit {
 
   sweeps: Sweep[] = [];
-  device_name: string = '';
+  deviceName: string = '';
+  strengthData: Array<number> = [];
+  timeStamp: Array<Label> = [];
 
-  constructor(private route: ActivatedRoute, private service: SweepService) { }
+  constructor(private route: ActivatedRoute, 
+              private service: SweepService) { }
 
   ngOnInit(): void {
-    this.device_name = this.route.snapshot.params.device_name;
-    this.service.getDeviceSweeps(this.device_name)
+    this.deviceName = this.route.snapshot.params.deviceName;
+    this.service.getDeviceSweeps(this.deviceName)
       .subscribe(Response => {
         this.sweeps = Response;
+        this.sweeps.forEach(sweep => {
+          this.strengthData.push(sweep.strength);
+          let formated_time = new Date(sweep.hub_timestamp);
+          this.timeStamp.push(formated_time.toLocaleString('en-US'));
+        });
       })
   }
 

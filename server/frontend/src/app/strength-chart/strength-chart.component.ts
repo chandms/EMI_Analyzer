@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { ChartDataSets, ChartType } from 'chart.js';
+import { Component, Input, OnInit } from '@angular/core';
+import { ChartDataSets, ChartOptions, ChartType } from 'chart.js';
 import { Color, Label } from 'ng2-charts';
 
 @Component({
@@ -9,12 +9,27 @@ import { Color, Label } from 'ng2-charts';
 })
 export class StrengthChartComponent implements OnInit {
 
-  lineChartData: ChartDataSets[] = [
-    { data: [1, 2, 4, 5, 8, 10], label: 'Strenght' },
-  ];
-  lineChartLabels: Label[] = ['Day 0', 'Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'];
-  lineChartOptions = {
+  @Input() deviceName!:string;
+  @Input() strengthData!:Array<number>;
+  @Input() timeStamp!: Array<Label>;
+
+  lineChartData: ChartDataSets[] = [];
+  lineChartLabels: Label[] = [];
+  lineChartOptions: ChartOptions = {
     responsive: true,
+    title: {
+      display: true,
+      text: 'Concrete Strength'
+    },
+    scales: {
+      xAxes: [{
+        type: 'time',
+        time: {
+          parser: 'MM/DD/YYYY, HH:mm:ss a',
+          unit: 'day'
+        }
+      }]
+    } 
   };
   lineChartColors: Color[] = [
     {
@@ -29,6 +44,11 @@ export class StrengthChartComponent implements OnInit {
   constructor() { }
 
   ngOnInit(): void {
+    this.lineChartData.push({
+      data: this.strengthData,
+      label: 'strength'
+    });
+    this.lineChartLabels = this.timeStamp;
   }
 
 }

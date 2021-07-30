@@ -38,11 +38,11 @@ import { StrengthChartComponent } from './strength-chart/strength-chart.componen
         component: SweepComponent
       },
       {
-        path: 'device/:device_name',
+        path: 'device/:deviceName',
         component: DeviceComponent
       },
       {
-        path: 'location/:device_name',
+        path: 'location/:deviceName',
         component: LocationComponent
       }
     ])

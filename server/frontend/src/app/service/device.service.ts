@@ -13,6 +13,7 @@ import { Device } from '../device/device.component';
 @Injectable({
   providedIn: 'root'
 })
+
 export class DeviceService {
 
   private url = env.backend_url + '/device';
