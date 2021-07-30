@@ -20,7 +20,7 @@ class DownloadHandler(Resource):
 
     def get(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('id')
+        parser.add_argument('id', required=True)
         args = parser.parse_args()
         sweep_id = args['id']
         sweep = Sweep.query.filter(Sweep.id == sweep_id).first()

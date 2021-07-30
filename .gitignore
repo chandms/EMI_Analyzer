@@ -6,3 +6,4 @@ sweeps
 server/backend/migrations/
 .env
 server/frontend/dist
+server/backend/data_process/EMI_JEO-2021-07-22T174555.csv

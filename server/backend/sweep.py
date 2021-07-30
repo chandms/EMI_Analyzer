@@ -5,8 +5,16 @@ Date: 5/27/2021
 Description: Sweep database API.
 '''
 
+import yaml
+from pathlib import Path
 from flask_restful  import Resource, reqparse
-from models import Sweep, Device
+from models import db, Sweep, Device
+from analyzer import strength_calculator
+from log import logger
+
+with open('config.yaml') as f:
+    configs = yaml.load(f, Loader=yaml.FullLoader)
+    path = Path(configs['sweep_path'])
 
 class SweepAPI(Resource):
 
@@ -33,13 +41,21 @@ class SweepAPI(Resource):
             sweep_query = Sweep.query.order_by(Sweep.hub_time.desc()).all()
 
         for sweep in sweep_query:
-            sweeps.append({
-                'id': sweep.id,
-                'device_name': sweep.device.name,
-                'hub_timestamp': sweep.hub_time.isoformat(),
-                'server_timestamp': sweep.server_time.isoformat(),
-                'rssi': sweep.rssi,
-                'filename': sweep.filename
-                })
+            sweep_data = sweep.json()
+
+            if sweep_data['strength'] is None:
+                input_file = path / sweep.filename
+                output_file = path / f'{input_file.stem}-processed.csv'
+                try:
+                    strength = strength_calculator(input_file, output_file)
+
+                except Exception as e:
+                    logger.error(f'Sweep {input_file.stem} has no impededance value => {e}')
+                    strength = 0
+            
+                sweep.strength = strength
+                db.session.commit()
+
+            sweeps.append(sweep_data)
 
         return sweeps
