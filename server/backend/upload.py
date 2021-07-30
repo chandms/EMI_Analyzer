@@ -15,7 +15,6 @@ from models import db, Sweep, Device
 from log import logger
 
 
-
 with open('config.yaml') as f:
     configs = yaml.load(f, Loader=yaml.FullLoader)
     path = Path(configs['sweep_path'])
