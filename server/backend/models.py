@@ -23,14 +23,13 @@ class Sweep(db.Model):
     rssi = db.Column(db.Integer, default=None)
     strength = db.Column(db.Integer, default=None)
 
-    def __init__(self, filename, sensor_time=None, hub_time=None, temperature=None, rssi=None, strength=None):
+    def __init__(self, filename, sensor_time, hub_time, temperature, rssi=None):
         self.filename = filename
         self.sensor_time = sensor_time
         self.hub_time = hub_time
         self.server_time = datetime.now(timezone.utc).replace(microsecond=0)
         self.temperature = temperature
         self.rssi = rssi
-        self.strength = strength
 
     def __repr__(self):
         return f'Sweep from {self.device.name} received at {self.server_time}'
@@ -39,7 +38,7 @@ class Sweep(db.Model):
         return {
             'id': self.id,
             'device_name': self.device.name,
-            'sensor_time': self.sensor_time.isoformat() if self.sensor_time is not None else None,
+            'sensor_timestamp': self.sensor_time.isoformat() if self.sensor_time is not None else None,
             'hub_timestamp': self.hub_time.isoformat(),
             'server_timestamp': self.server_time.isoformat(),
             'rssi': self.rssi,

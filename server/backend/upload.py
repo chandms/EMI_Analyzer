@@ -30,26 +30,28 @@ class UploadHandler(Resource):
         parser.add_argument('device_name', required=True)
         parser.add_argument('mac_address', required=True)
         parser.add_argument('hub_time', required=True)
-        parser.add_argument('sensor_time')
+        parser.add_argument('sensor_time', required=True)
+        parser.add_argument('temperature', required=True)
         parser.add_argument('rssi')
         args = parser.parse_args()
-        hubtime = datetime.fromisoformat(args['hub_time'])
+        hub_timestamp = datetime.fromisoformat(args['hub_time'])
+        sensor_timestamp = datetime.fromisoformat(args['sensor_time'])
         # check if the device is already in the database or not
         device = Device.query.filter_by(name=args['device_name'],
-                                        mac_address = args['mac_address']).first()
+                                        mac_address=args['mac_address']).first()
         if device is None:
             logger.info(f'Device is not found. Creating a new one.')
             device = Device(
                 name = args['device_name'],
                 mac_address = args['mac_address'],
-                timestamp = hubtime
+                timestamp = sensor_timestamp
             )
             db.session.add(device)
 
         else:
             logger.info(f'{device} found.')
-            if device.last_updated < hubtime:
-                device.last_updated = hubtime
+            if device.last_updated < sensor_timestamp:
+                device.last_updated = sensor_timestamp
         
         # save file
         upload_file = args['file']
@@ -57,8 +59,10 @@ class UploadHandler(Resource):
         upload_file.save(path / filename)
         sweep_meta = Sweep(
             filename = filename,
-            hub_time = hubtime,
-            rssi = args['rssi']
+            hub_time = hub_timestamp,
+            rssi = args['rssi'],
+            sensor_time = sensor_timestamp,
+            temperature = args['temperature']
         )
         device.sweeps.append(sweep_meta)
         db.session.add(sweep_meta)
