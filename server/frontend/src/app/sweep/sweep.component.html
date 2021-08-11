@@ -14,6 +14,7 @@
                 <th>Device Name</th>
                 <th>Timestamp</th>
                 <th class="center">Strength</th>
+                <th class="center">Temperature</th>
                 <th class="center">RSSI</th>
                 <th class="center">Download</th>
             </tr>
@@ -21,8 +22,9 @@
         <tbody>
             <tr *ngFor="let sweep of sweeps">
                 <td [routerLink]="['/device', sweep.device_name]" class="clickable">{{ sweep.device_name }}</td>
-                <td>{{ sweep.hub_timestamp | date: 'medium' }}</td>
+                <td>{{ sweep.sensor_timestamp | date: 'medium' }}</td>
                 <td class="center">{{ sweep.strength }}</td>
+                <td class="center">{{ sweep.temperature }}</td>
                 <td class="center">{{ sweep.rssi }}</td>
                 <td class="center">
                     <i (click)="download(sweep)" class="bi bi-cloud-download clickable"></i>
