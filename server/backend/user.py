@@ -2,14 +2,14 @@
 Author: Thirawat Bureetes
 Email: tbureete@purdue.edu
 Date: 8/24/2021
-Description: API for authenticate user using jwt
+Description: API for authenticate user using jwt and create new user.
 '''
 
 import jwt
 from dotenv import dotenv_values
 from datetime import datetime, timezone, timedelta
 from flask_restful  import Resource, reqparse
-from models import User
+from models import db, User
 from log import logger
 
 env_config = dotenv_values()
@@ -32,10 +32,10 @@ class LoginAPI(Resource):
         
         else:
             if user.password == args["password"]:
-                create_time = datetime.now(timezone.utc).replace(microsecond=0)
+                login_time = datetime.now(timezone.utc).replace(microsecond=0)
                 payload = {
-                    'iat': create_time,
-                    'exp': create_time + timedelta(hours=1),
+                    'iat': login_time,
+                    'exp': login_time + timedelta(hours=1),
                     'firstname': user.firstname,
                     'lastname': user.lastname,
                     'email': user.email
@@ -45,7 +45,10 @@ class LoginAPI(Resource):
                     env_config["secret"],
                     algorithm='HS256'
                 ).decode('utf8')
-                
+                user.last_login = login_time
+                db.session.commit()
+                logger.info(f'{user.username} successfully login at {login_time}.')
+
                 return token
 
             else:
