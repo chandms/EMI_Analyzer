@@ -54,3 +54,37 @@ class LoginAPI(Resource):
             else:
                 return {'message': f'Invalid password'}, 400
 
+
+class CreateUserAPI(Resource):
+
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('username', required=True)
+        parser.add_argument('password', required=True)
+        parser.add_argument('firstname', required=True)
+        parser.add_argument('lastname', required=True)
+        parser.add_argument('email',  required=True)
+        args = parser.parse_args()
+        user = User.query.filter_by(username=args['username']).first()
+
+        if user is not None:
+            return {'message': f'The username {args["username"]} ' \
+                               f'already exist in the database'}, 400
+        
+        else:
+            new_user = User(
+                username = args["username"],
+                password = args["password"],
+                firstname = args["firstname"],
+                lastname = args["lastname"],
+                email = args["email"]
+            )
+            
+            db.session.add(new_user)
+            db.session.commit()
+            logger.info(f'{new_user.username} is created in the database.')
+
+            return {'message': f'{new_user.username} is created in the database.'}
+
+
+
