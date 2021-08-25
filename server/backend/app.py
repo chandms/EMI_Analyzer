@@ -15,6 +15,7 @@ from upload import UploadHandler
 from download import DownloadHandler
 from sweep import SweepAPI
 from device import DeviceAPI
+from user import LoginAPI
 
 env_config = dotenv_values()
 
@@ -34,6 +35,7 @@ api.add_resource(UploadHandler, '/upload')
 api.add_resource(SweepAPI, '/sweep')
 api.add_resource(DownloadHandler, '/download')
 api.add_resource(DeviceAPI, '/device')
+api.add_resource(LoginAPI, '/authentication')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)

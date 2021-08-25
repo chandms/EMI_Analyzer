@@ -22,7 +22,7 @@ with open('config.yaml') as f:
 class UploadHandler(Resource):
 
     def get(self):
-        return {'message': 'If you see this, it means the system works!'}
+        return {'message': 'If you see this, it means the upload api is online!'}
 
     def post(self):
         parser = reqparse.RequestParser()

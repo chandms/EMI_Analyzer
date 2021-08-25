@@ -75,3 +75,37 @@ class Device(db.Model):
             'longitude': self.longitude,
             'latitude': self.latitude
         }
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String())
+    password = db.Column(db.String())
+    firstname = db.Column(db.String())
+    lastname = db.Column(db.String())
+    email = db.Column(db.String())
+    last_login = db.Column(db.DateTime(timezone=True))
+    # group = db.Column(db.Integer, db.ForeignKey('groups.id'))
+
+    def __init__(self, username, password, firstname, lastname, email=None) -> None:
+        self.username = username
+        self.password = password
+        self.firstname = firstname
+        self.lastname = lastname
+        self.email = email
+
+    def __repr__(self) -> str:
+        return f'User {self.firstname} {self.lastname} last seen at {self.last_login}'
+
+
+# class Group(db.Model):
+#     __tablename__ = 'groups'
+
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String())
+#     devices = db.relationship('Device', backref='groups')
+#     users = db.relationship('User', backref='groups')
+
+#     def __init__(self, name) -> None:
+#         self.name = name
