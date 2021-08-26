@@ -49,7 +49,10 @@ class LoginAPI(Resource):
                 db.session.commit()
                 logger.info(f'{user.username} successfully login at {login_time}.')
 
-                return token
+                return  {
+                    'message': f'Login is successful.',
+                    'token': token
+                }
 
             else:
                 return {'message': f'Invalid password'}, 400
