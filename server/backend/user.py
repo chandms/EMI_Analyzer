@@ -44,7 +44,7 @@ class LoginAPI(Resource):
                     payload,
                     env_config["secret"],
                     algorithm='HS256'
-                ).decode('utf8')
+                )
                 user.last_login = login_time
                 db.session.commit()
                 logger.info(f'{user.username} successfully login at {login_time}.')
