@@ -15,6 +15,9 @@ import { DeviceService } from './service/device.service';
 import { LocationComponent } from './location/location.component';
 import { MapAllComponent } from './map-all/map-all.component';
 import { StrengthChartComponent } from './strength-chart/strength-chart.component';
+import { LoginComponent } from './login/login.component';
+import { LoginService } from './service/login.service';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -23,7 +26,8 @@ import { StrengthChartComponent } from './strength-chart/strength-chart.componen
     DeviceComponent,
     LocationComponent,
     MapAllComponent,
-    StrengthChartComponent
+    StrengthChartComponent,
+    LoginComponent
   ],
   imports: [
     BrowserModule,
@@ -32,10 +36,11 @@ import { StrengthChartComponent } from './strength-chart/strength-chart.componen
     HttpClientModule,
     BrowserAnimationsModule,
     ChartsModule,
+    ReactiveFormsModule,
     RouterModule.forRoot([
       {
         path: '',
-        component: SweepComponent
+        component: LoginComponent
       },
       {
         path: 'device/:deviceName',
@@ -44,12 +49,18 @@ import { StrengthChartComponent } from './strength-chart/strength-chart.componen
       {
         path: 'location/:deviceName',
         component: LocationComponent
-      }
+      },
+      {
+        path: 'map-devices',
+        component: SweepComponent
+      },
+      
     ])
   ],
   providers: [
     SweepService,
-    DeviceService
+    DeviceService,
+    LoginService
   ],
   bootstrap: [AppComponent]
 })
