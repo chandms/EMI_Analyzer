@@ -20,6 +20,13 @@ export class DeviceService {
 
   constructor(private http: HttpClient) { }
 
+  getDeviceDescription(device: Device){
+    let desc = 
+      'device_id : ' +device.device_id+", "+"\n device_name : " +device.device_name+", "
+      +'\n mac : ' +device.mac_address ;
+    return desc;
+  }
+
   getDeviceInfo(device_name: string){
     let params = new HttpParams;
     params = params.append('device_name', device_name);
