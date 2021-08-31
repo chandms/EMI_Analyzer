@@ -22,7 +22,7 @@ export class DeviceService {
 
   getDeviceDescription(device: Device){
     let desc = 
-      'device_id : ' +device.device_id+", "+"\n device_name : " +device.device_name+", "
+      'device_id : ' +device.device_id+", "+"\n device_name : " +'<a href=\"/device/'+ device.device_name +'\"> '+device.device_name+'</a>'+", "
       +'\n mac : ' +device.mac_address ;
     return desc;
   }
