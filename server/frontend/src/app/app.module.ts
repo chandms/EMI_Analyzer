@@ -18,6 +18,10 @@ import { StrengthChartComponent } from './strength-chart/strength-chart.componen
 import { LoginComponent } from './login/login.component';
 import { LoginService } from './service/login.service';
 import { ReactiveFormsModule } from '@angular/forms';
+import { HeaderComponent } from './header/header.component';
+import { AuthService } from './service/auth.service';
+import { BackButtonDisableModule } from 'angular-disable-browser-back-button';
+
 
 @NgModule({
   declarations: [
@@ -27,7 +31,8 @@ import { ReactiveFormsModule } from '@angular/forms';
     LocationComponent,
     MapAllComponent,
     StrengthChartComponent,
-    LoginComponent
+    LoginComponent,
+    HeaderComponent
   ],
   imports: [
     BrowserModule,
@@ -37,6 +42,9 @@ import { ReactiveFormsModule } from '@angular/forms';
     BrowserAnimationsModule,
     ChartsModule,
     ReactiveFormsModule,
+    BackButtonDisableModule.forRoot({
+      preserveScrollPosition: true
+    }),
     RouterModule.forRoot([
       {
         path: '',
@@ -60,7 +68,8 @@ import { ReactiveFormsModule } from '@angular/forms';
   providers: [
     SweepService,
     DeviceService,
-    LoginService
+    LoginService,
+    AuthService
   ],
   bootstrap: [AppComponent]
 })

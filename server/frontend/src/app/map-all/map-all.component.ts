@@ -35,17 +35,11 @@ export class MapAllComponent implements OnInit {
   zoom: number = 12;
   latitude: number = 40.4259;
   longitude: number = -86.9081;
-  user_first_name: string ="";
-  user_last_name: string ="";
-  user_email = "";
   $: any;
 
   
 
   ngOnInit(): void {
-    this.user_first_name = history.state.firstname;
-    this.user_last_name = history.state.lastname;
-    this.user_email = history.state.email;
     this.map = new Map({
       target: 'all_device_map',
       layers: [

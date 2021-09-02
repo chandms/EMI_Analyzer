@@ -27,6 +27,8 @@ export class DeviceComponent implements OnInit {
               private service: SweepService) { }
 
   ngOnInit(): void {
+
+    
     this.deviceName = this.route.snapshot.params.deviceName;
     this.service.getDeviceSweeps(this.deviceName)
       .subscribe(Response => {
