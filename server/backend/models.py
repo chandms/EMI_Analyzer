@@ -11,10 +11,10 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 
 class Sweep(db.Model):
-    __tablename__ = 'sweep'
+    __tablename__ = 'sweeps'
     
     id = db.Column(db.Integer, primary_key=True)
-    device_id = db.Column(db.Integer(), db.ForeignKey('device.id'))
+    device_id = db.Column(db.Integer(), db.ForeignKey('devices.id'))
     filename = db.Column(db.String)
     sensor_time = db.Column(db.DateTime(timezone=True), default=None)
     hub_time = db.Column(db.DateTime(timezone=True), default=None)
@@ -32,12 +32,13 @@ class Sweep(db.Model):
         self.rssi = rssi
 
     def __repr__(self):
-        return f'Sweep from {self.device.name} received at {self.server_time}'
+        return f'Sweep from {self.devices.name} received at {self.server_time}'
 
     def json(self):
         return {
             'id': self.id,
-            'device_name': self.device.name,
+            'device_name': self.devices.name,
+            'device_id': self.device_id,
             'sensor_timestamp': self.sensor_time.isoformat() if self.sensor_time is not None 
                                 else self.hub_time.isoformat(),
             'hub_timestamp': self.hub_time.isoformat(),
@@ -48,7 +49,7 @@ class Sweep(db.Model):
         }
 
 class Device(db.Model):
-    __tablename__ = 'device'
+    __tablename__ = 'devices'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String())
@@ -56,7 +57,7 @@ class Device(db.Model):
     last_updated = db.Column(db.DateTime(timezone=True))
     longitude = db.Column(db.Float)
     latitude = db.Column(db.Float)
-    sweeps = db.relationship('Sweep', backref='device')
+    sweeps = db.relationship('Sweep', backref='devices')
 
     def __init__(self, name, timestamp, mac_address=None) -> None:
         self.name = name
@@ -86,7 +87,7 @@ class User(db.Model):
     lastname = db.Column(db.String())
     email = db.Column(db.String())
     last_login = db.Column(db.DateTime(timezone=True))
-    # group = db.Column(db.Integer, db.ForeignKey('groups.id'))
+    # project = db.Column(db.Integer, db.ForeignKey('projects.id'))
 
     def __init__(self, username, password, firstname, lastname, email=None) -> None:
         self.username = username
@@ -99,13 +100,24 @@ class User(db.Model):
         return f'User {self.firstname} {self.lastname} last seen at {self.last_login}'
 
 
-# class Group(db.Model):
-#     __tablename__ = 'groups'
+# class Project(db.Model):
+#     __tablename__ = 'projects'
 
 #     id = db.Column(db.Integer, primary_key=True)
 #     name = db.Column(db.String())
-#     devices = db.relationship('Device', backref='groups')
-#     users = db.relationship('User', backref='groups')
+#     hubs = db.relationship('SensorHub', backref='projects')
+#     users = db.relationship('User', backref='projects')
 
 #     def __init__(self, name) -> None:
 #         self.name = name
+
+# class SensorHub(db.Model):
+#     __tablename__ = 'hubs'
+
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String())
+#     devices = db.relationship('Device', backref='hubs')
+
+#     def __init__(self, name) -> None:
+#         self.name = name
+
