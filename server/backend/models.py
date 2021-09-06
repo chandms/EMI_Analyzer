@@ -19,9 +19,10 @@ class Sweep(db.Model):
     sensor_time = db.Column(db.DateTime(timezone=True), default=None)
     hub_time = db.Column(db.DateTime(timezone=True), default=None)
     server_time = db.Column(db.DateTime(timezone=True))
-    temperature = db.Column(db.Integer, default=None)
-    rssi = db.Column(db.Integer, default=None)
-    strength = db.Column(db.Integer, default=None)
+    temperature = db.Column(db.Float, default=None)
+    ambient_temp = db.Column(db.Float, default=None)
+    rssi = db.Column(db.Float, default=None)
+    strength = db.Column(db.Float, default=None)
 
     def __init__(self, filename, sensor_time, hub_time, temperature, rssi=None):
         self.filename = filename
@@ -45,7 +46,8 @@ class Sweep(db.Model):
             'server_timestamp': self.server_time.isoformat(),
             'rssi': self.rssi,
             'strength': self.strength,
-            'temperature': self.temperature
+            'temperature': self.temperature, 
+            'ambient_temp': self.ambient_temp
         }
 
 class Device(db.Model):

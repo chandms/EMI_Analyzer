@@ -6,6 +6,7 @@ Description: Sweep database API.
 '''
 
 import yaml
+from datetime import datetime
 from pathlib import Path
 from flask_restful  import Resource, reqparse
 from models import db, Sweep, Device
@@ -59,3 +60,48 @@ class SweepAPI(Resource):
             sweeps.append(sweep_data)
 
         return sweeps
+
+class SweepManual(Resource):
+
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('device_name', required=True)
+        parser.add_argument('sensor_time', required=True)
+        parser.add_argument('temperature')
+        parser.add_argument('ambient_temp')
+        parser.add_argument('strength')
+        args = parser.parse_args()
+        sensor_timestamp = datetime.fromisoformat(args['sensor_time'])
+        hub_timestamp = sensor_timestamp
+        # check if the device is already in the database or not
+        device = Device.query.filter_by(name=args['device_name']).first()
+        if device is None:
+            logger.info(f'Device is not found. Creating a new one.')
+            device = Device(
+                name = args['device_name'],
+                timestamp = sensor_timestamp
+            )
+            db.session.add(device)
+
+        else:
+            logger.info(f'{device} found.')
+            if device.last_updated < sensor_timestamp:
+                device.last_updated = sensor_timestamp
+        
+        # save file
+        sweep_meta = Sweep(
+            filename = '#',
+            hub_time = hub_timestamp,
+            sensor_time = sensor_timestamp,
+            temperature = float(args['temperature']) if (args['temperature']) is not None
+                          else None
+        )
+        sweep_meta.ambient_temp = float(args['ambient_temp']) if (args['ambient_temp']) is not None \
+                                  else None
+        sweep_meta.strength = float(args['strength'])
+        device.sweeps.append(sweep_meta)
+        db.session.add(sweep_meta)
+        logger.info(f'{sweep_meta} recorded into database.')
+        db.session.commit()
+      
+        return sweep_meta.json(), 201
