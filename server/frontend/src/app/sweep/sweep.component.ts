@@ -72,5 +72,6 @@ export interface Sweep {
   filename: string;
   strength: number;
   temperature: number | any;
+  ambient_temp: number | any;
 
 }

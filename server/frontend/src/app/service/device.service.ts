@@ -22,8 +22,8 @@ export class DeviceService {
 
   getDeviceDescription(device: Device){
     let desc = 
-      'device_id : ' +device.device_id+" "+"\n <br> device_name : " +'<a href=\"/device/'+ device.device_name +'\"> '+device.device_name+'</a>'+" "
-      +'\n <br> mac : ' +device.mac_address ;
+      'device_id : ' +device.device_id+" "+"\n <br> strength info : " +'<a href=\"/device/'+ device.device_name +'\"> '+device.device_name+'</a>'
+      +"\n <br> temperature info : "+'<a href=\"/device-temp/'+ device.device_name +'\"> '+device.device_name+'</a>';
     return desc;
   }
 

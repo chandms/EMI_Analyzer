@@ -33,8 +33,8 @@ export class MapAllComponent implements OnInit {
 
   map!: Map;
   zoom: number = 12;
-  latitude: number = 40.4259;
-  longitude: number = -86.9081;
+  latitude: number = 41.079990;
+  longitude: number = -85.138601;
   $: any;
 
   

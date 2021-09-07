@@ -21,6 +21,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { HeaderComponent } from './header/header.component';
 import { AuthService } from './service/auth.service';
 import { BackButtonDisableModule } from 'angular-disable-browser-back-button';
+import { DeviceInfoComponent } from './device-info/device-info.component';
+import { DeviceTempComponent } from './device-temp/device-temp.component';
 
 
 @NgModule({
@@ -32,7 +34,9 @@ import { BackButtonDisableModule } from 'angular-disable-browser-back-button';
     MapAllComponent,
     StrengthChartComponent,
     LoginComponent,
-    HeaderComponent
+    HeaderComponent,
+    DeviceInfoComponent,
+    DeviceTempComponent
   ],
   imports: [
     BrowserModule,
@@ -60,8 +64,20 @@ import { BackButtonDisableModule } from 'angular-disable-browser-back-button';
       },
       {
         path: 'map-devices',
+        component: MapAllComponent
+      },
+      {
+        path: 'sweep',
         component: SweepComponent
       },
+      {
+        path: 'device-info/:deviceName',
+        component: DeviceInfoComponent
+      },
+      {
+        path: 'device-temp/:deviceName',
+        component: DeviceTempComponent
+      }
       
     ])
   ],

@@ -1,10 +1,3 @@
-/*
-Author: Thirawat Bureetes
-Email: tbureete@purdue.edu
-Date: 06/22/2021
-Description: This component displays all sweeps for a certain device in the table.
-*/
-
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Label } from 'ng2-charts';
@@ -12,20 +5,17 @@ import { SweepService } from '../service/sweep.service';
 import { Sweep } from './../sweep/sweep.component';
 
 @Component({
-  selector: 'device',
-  templateUrl: './device.component.html',
-  styleUrls: ['./device.component.css']
+  selector: 'app-device-info',
+  templateUrl: './device-info.component.html',
+  styleUrls: ['./device-info.component.css']
 })
-export class DeviceComponent implements OnInit {
+export class DeviceInfoComponent implements OnInit {
 
   sweeps: Sweep[] = [];
   deviceName: string = '';
   strengthData: Array<number> = [];
   timeStamp: Array<Label> = [];
-  title: string ='';
-  label: string ='';
 
-  
   constructor(private route: ActivatedRoute, 
               private service: SweepService) { }
 
@@ -33,8 +23,6 @@ export class DeviceComponent implements OnInit {
 
     
     this.deviceName = this.route.snapshot.params.deviceName;
-    this.title = 'Concrete Strength';
-    this.label = 'strength';
     this.service.getDeviceSweeps(this.deviceName)
       .subscribe(Response => {
         this.sweeps = Response;
@@ -44,8 +32,6 @@ export class DeviceComponent implements OnInit {
           this.timeStamp.push(formated_time.toLocaleString('en-US'));
         });
       })
-
-      console.log("test 1"+this.strengthData)
   }
 
   download(sweep: Sweep) {
@@ -55,13 +41,4 @@ export class DeviceComponent implements OnInit {
     });
   }
 
-}
-
-export interface Device {
-  device_id: number;
-  device_name: string;
-  mac_address: string;
-  last_updated: Date;
-  longitude: number;
-  latitude: number;
 }
