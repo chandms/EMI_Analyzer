@@ -20,12 +20,13 @@ export class DeviceComponent implements OnInit {
 
   sweeps: Sweep[] = [];
   deviceName: string = '';
+  title: string = '';
+  temperatureData: Array<number> = [];
   strengthData: Array<number> = [];
   timeStamp: Array<Label> = [];
-  title: string ='';
-  label: string ='';
+  label: string = '';
+  yLabel: string = '';
 
-  
   constructor(private route: ActivatedRoute, 
               private service: SweepService) { }
 
@@ -33,19 +34,21 @@ export class DeviceComponent implements OnInit {
 
     
     this.deviceName = this.route.snapshot.params.deviceName;
-    this.title = 'Concrete Strength';
-    this.label = 'strength';
+    this.title = 'Concrete Strength'
+    this.label = 'strength'
+    this.yLabel = 'Strength (psi)'
     this.service.getDeviceSweeps(this.deviceName)
       .subscribe(Response => {
         this.sweeps = Response;
         this.sweeps.forEach(sweep => {
+          console.log(sweep.ambient_temp,sweep.strength)
+          this.temperatureData.push(sweep.ambient_temp);
           this.strengthData.push(sweep.strength);
           let formated_time = new Date(sweep.hub_timestamp);
           this.timeStamp.push(formated_time.toLocaleString('en-US'));
         });
       })
-
-      console.log("test 1"+this.strengthData)
+      
   }
 
   download(sweep: Sweep) {

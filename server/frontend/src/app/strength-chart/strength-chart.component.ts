@@ -14,6 +14,7 @@ export class StrengthChartComponent implements OnInit {
   @Input() timeStamp!: Array<Label>;
   @Input() title!: string;
   @Input() label!: string;
+  @Input() yLabel!: string;
 
   lineChartData: ChartDataSets[] = [];
   lineChartLabels: Label[] = [];
@@ -28,7 +29,13 @@ export class StrengthChartComponent implements OnInit {
         type: 'time',
         time: {
           parser: 'MM/DD/YYYY, HH:mm:ss a',
-          unit: 'day'
+          unit: 'hour'
+        }
+      }],
+      yAxes: [{
+        scaleLabel: {
+          display: true,
+          labelString: ''
         }
       }]
     } 
@@ -41,17 +48,19 @@ export class StrengthChartComponent implements OnInit {
   ];
   lineChartLegend = false;
   lineChartPlugins = [];
-  lineChartType: ChartType  = 'bubble';
+  lineChartType: ChartType  = 'scatter';
 
   constructor() { }
 
   ngOnInit(): void {
     this.lineChartData.push({
       data: this.strengthData,
-      label: this.label
+      label: this.label,
+      radius: 15
     });
     this.lineChartLabels = this.timeStamp;
     this.lineChartOptions.title.text = this.title;
+    this.lineChartOptions.scales.yAxes[0].scaleLabel.labelString = this.yLabel;
   }
 
 }

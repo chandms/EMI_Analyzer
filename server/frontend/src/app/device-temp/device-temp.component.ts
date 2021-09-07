@@ -18,6 +18,7 @@ export class DeviceTempComponent implements OnInit {
   strengthData: Array<number> = [];
   timeStamp: Array<Label> = [];
   label: string = '';
+  yLabel: string = '';
 
   constructor(private route: ActivatedRoute, 
               private service: SweepService) { }
@@ -28,6 +29,7 @@ export class DeviceTempComponent implements OnInit {
     this.deviceName = this.route.snapshot.params.deviceName;
     this.title = 'Concrete Temperature'
     this.label = 'ambient temperature'
+    this.yLabel = 'Temperature (Celcius)'
     this.service.getDeviceSweeps(this.deviceName)
       .subscribe(Response => {
         this.sweeps = Response;
@@ -39,9 +41,6 @@ export class DeviceTempComponent implements OnInit {
           this.timeStamp.push(formated_time.toLocaleString('en-US'));
         });
       })
-
-      console.log("hi ",this.temperatureData)
-      console.log("hiii ",this.strengthData)
       
   }
 
