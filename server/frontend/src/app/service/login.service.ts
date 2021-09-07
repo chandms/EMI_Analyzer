@@ -4,6 +4,8 @@ import { environment as env } from 'src/environments/environment';
 import jwt_decode from "jwt-decode";
 import { FormControl } from '@angular/forms';
 import { Login } from '../login/Login';
+import { User } from '../login/User';
+import { LocationStrategy } from '@angular/common';
 
 
 @Injectable({
@@ -13,8 +15,8 @@ export class LoginService {
 
   private authentication_url = env.backend_url + '/authentication';
 
-  constructor(private http: HttpClient) { }
-
+  constructor(private http: HttpClient,private locationStrategy: LocationStrategy) { }
+  user: User;
   decodeUser(username: string ,password: string){
     let body = {
       'username': username,
@@ -22,7 +24,6 @@ export class LoginService {
     };
     return this.http.post<Login>(this.authentication_url, body);
   }
-
   
   
 }

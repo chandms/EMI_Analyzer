@@ -18,6 +18,12 @@ import { StrengthChartComponent } from './strength-chart/strength-chart.componen
 import { LoginComponent } from './login/login.component';
 import { LoginService } from './service/login.service';
 import { ReactiveFormsModule } from '@angular/forms';
+import { HeaderComponent } from './header/header.component';
+import { AuthService } from './service/auth.service';
+import { BackButtonDisableModule } from 'angular-disable-browser-back-button';
+import { DeviceInfoComponent } from './device-info/device-info.component';
+import { DeviceTempComponent } from './device-temp/device-temp.component';
+
 
 @NgModule({
   declarations: [
@@ -27,7 +33,10 @@ import { ReactiveFormsModule } from '@angular/forms';
     LocationComponent,
     MapAllComponent,
     StrengthChartComponent,
-    LoginComponent
+    LoginComponent,
+    HeaderComponent,
+    DeviceInfoComponent,
+    DeviceTempComponent
   ],
   imports: [
     BrowserModule,
@@ -37,6 +46,9 @@ import { ReactiveFormsModule } from '@angular/forms';
     BrowserAnimationsModule,
     ChartsModule,
     ReactiveFormsModule,
+    BackButtonDisableModule.forRoot({
+      preserveScrollPosition: true
+    }),
     RouterModule.forRoot([
       {
         path: '',
@@ -52,15 +64,28 @@ import { ReactiveFormsModule } from '@angular/forms';
       },
       {
         path: 'map-devices',
+        component: MapAllComponent
+      },
+      {
+        path: 'sweep',
         component: SweepComponent
       },
+      {
+        path: 'device-info/:deviceName',
+        component: DeviceInfoComponent
+      },
+      {
+        path: 'device-temp/:deviceName',
+        component: DeviceTempComponent
+      }
       
     ])
   ],
   providers: [
     SweepService,
     DeviceService,
-    LoginService
+    LoginService,
+    AuthService
   ],
   bootstrap: [AppComponent]
 })

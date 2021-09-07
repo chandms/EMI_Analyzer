@@ -22,12 +22,19 @@ export class DeviceComponent implements OnInit {
   deviceName: string = '';
   strengthData: Array<number> = [];
   timeStamp: Array<Label> = [];
+  title: string ='';
+  label: string ='';
 
+  
   constructor(private route: ActivatedRoute, 
               private service: SweepService) { }
 
   ngOnInit(): void {
+
+    
     this.deviceName = this.route.snapshot.params.deviceName;
+    this.title = 'Concrete Strength';
+    this.label = 'strength';
     this.service.getDeviceSweeps(this.deviceName)
       .subscribe(Response => {
         this.sweeps = Response;
@@ -37,6 +44,8 @@ export class DeviceComponent implements OnInit {
           this.timeStamp.push(formated_time.toLocaleString('en-US'));
         });
       })
+
+      console.log("test 1"+this.strengthData)
   }
 
   download(sweep: Sweep) {

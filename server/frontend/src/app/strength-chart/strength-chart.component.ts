@@ -12,6 +12,8 @@ export class StrengthChartComponent implements OnInit {
   @Input() deviceName!:string;
   @Input() strengthData!:Array<number>;
   @Input() timeStamp!: Array<Label>;
+  @Input() title!: string;
+  @Input() label!: string;
 
   lineChartData: ChartDataSets[] = [];
   lineChartLabels: Label[] = [];
@@ -19,7 +21,7 @@ export class StrengthChartComponent implements OnInit {
     responsive: true,
     title: {
       display: true,
-      text: 'Concrete Strength'
+      text: this.title,
     },
     scales: {
       xAxes: [{
@@ -39,16 +41,17 @@ export class StrengthChartComponent implements OnInit {
   ];
   lineChartLegend = false;
   lineChartPlugins = [];
-  lineChartType: ChartType  = 'line';
+  lineChartType: ChartType  = 'bubble';
 
   constructor() { }
 
   ngOnInit(): void {
     this.lineChartData.push({
       data: this.strengthData,
-      label: 'strength'
+      label: this.label
     });
     this.lineChartLabels = this.timeStamp;
+    this.lineChartOptions.title.text = this.title;
   }
 
 }

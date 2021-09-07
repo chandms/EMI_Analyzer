@@ -1,4 +1,17 @@
-.map {
-    height: 600px;
+/* .map {
+    height: 50%;
     width: 100%;
+  } */
+
+  .ol-popup {
+    position: absolute;
+    background-color: #FAEBD7;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #cccccc;
+    bottom: 12px;
+    left: -50px;
+    min-width: 280px;
   }
+  

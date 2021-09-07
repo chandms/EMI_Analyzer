@@ -20,6 +20,13 @@ export class DeviceService {
 
   constructor(private http: HttpClient) { }
 
+  getDeviceDescription(device: Device){
+    let desc = 
+      'device_id : ' +device.device_id+" "+"\n <br> strength info : " +'<a href=\"/device/'+ device.device_name +'\"> '+device.device_name+'</a>'
+      +"\n <br> temperature info : "+'<a href=\"/device-temp/'+ device.device_name +'\"> '+device.device_name+'</a>';
+    return desc;
+  }
+
   getDeviceInfo(device_name: string){
     let params = new HttpParams;
     params = params.append('device_name', device_name);

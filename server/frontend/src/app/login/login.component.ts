@@ -3,7 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormControlName, FormGroup } from '@angular/forms';
 import { FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
-import jwtDecode from 'jwt-decode';
+import jwt_decode from "jwt-decode";
+import { AuthService } from '../service/auth.service';
 import { LoginService } from '../service/login.service';
 import { User } from './User';
 
@@ -17,7 +18,7 @@ export class LoginComponent implements OnInit {
 
 
 
-  constructor(private service : LoginService, private route : Router) {
+  constructor(private service : LoginService, private route : Router, private authService : AuthService) {
    }
 
   ngOnInit(): void {
@@ -25,14 +26,21 @@ export class LoginComponent implements OnInit {
 
   username =  new FormControl('');
   password= new FormControl('');
+  user: User;
+  
  
   
 
   onSubmit(){
     this.service.decodeUser(this.username.value,this.password.value).subscribe(
       Response => {
-        console.log(jwtDecode(Response.token))
-        this.route.navigateByUrl('/map-devices',{state: jwtDecode(Response.token)});
+        this.user = jwt_decode(Response.token);
+        if(this.username.value && this.password.value){
+        sessionStorage.setItem('user', JSON.stringify(this.user));
+        this.route.navigateByUrl('/map-devices',{state: jwt_decode(Response.token) });
+        }
+       
+       
       },
       (error: Response) => {
         console.log(error.status);
