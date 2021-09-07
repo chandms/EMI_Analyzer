@@ -40,8 +40,9 @@ class Sweep(db.Model):
             'id': self.id,
             'device_name': self.devices.name,
             'device_id': self.device_id,
-            'sensor_timestamp': self.sensor_time.isoformat() if self.sensor_time is not None 
-                                else self.hub_time.isoformat(),
+            # 'sensor_timestamp': self.sensor_time.isoformat() if self.sensor_time is not None 
+            #                     else self.hub_time.isoformat(),
+            'sensor_timestamp': self.hub_time.isoformat(),
             'hub_timestamp': self.hub_time.isoformat(),
             'server_timestamp': self.server_time.isoformat(),
             'rssi': self.rssi,

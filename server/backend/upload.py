@@ -50,8 +50,11 @@ class UploadHandler(Resource):
 
         else:
             logger.info(f'{device} found.')
-            if device.last_updated < sensor_timestamp:
-                device.last_updated = sensor_timestamp
+            # if device.last_updated < sensor_timestamp:
+            #     device.last_updated = sensor_timestamp
+            # Temporary using hub timestamp since sensor tiemstamp has bug
+            if device.last_updated < hub_timestamp:
+                device.last_updated = hub_timestamp
         
         # save file
         upload_file = args['file']
