@@ -15,6 +15,7 @@ export class StrengthChartComponent implements OnInit {
   @Input() title!: string;
   @Input() label!: string;
   @Input() yLabel!: string;
+  @Input() trendData!: Array<number>;
 
   lineChartData: ChartDataSets[] = [];
   lineChartLabels: Label[] = [];
@@ -48,7 +49,7 @@ export class StrengthChartComponent implements OnInit {
   ];
   lineChartLegend = false;
   lineChartPlugins = [];
-  lineChartType: ChartType  = 'scatter';
+  lineChartType: ChartType  = 'line';
 
   constructor() { }
 
@@ -56,8 +57,14 @@ export class StrengthChartComponent implements OnInit {
     this.lineChartData.push({
       data: this.strengthData,
       label: this.label,
-      radius: 15
+      radius: 15,
+      type: 'scatter'
     });
+      this.lineChartData.push({
+        data: this.trendData,
+        borderColor: 'rgba(255,0,0,0.2)',
+        type: 'line'
+      });
     this.lineChartLabels = this.timeStamp;
     this.lineChartOptions.title.text = this.title;
     this.lineChartOptions.scales.yAxes[0].scaleLabel.labelString = this.yLabel;

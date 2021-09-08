@@ -73,5 +73,6 @@ export interface Sweep {
   strength: number;
   temperature: number | any;
   ambient_temp: number | any;
+  trend: number | any;
 
 }
