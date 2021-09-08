@@ -19,6 +19,7 @@ export class DeviceTempComponent implements OnInit {
   timeStamp: Array<Label> = [];
   label: string = '';
   yLabel: string = '';
+  trendData: Array<number> = [];
 
   constructor(private route: ActivatedRoute, 
               private service: SweepService) { }

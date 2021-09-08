@@ -26,6 +26,7 @@ export class DeviceComponent implements OnInit {
   timeStamp: Array<Label> = [];
   label: string = '';
   yLabel: string = '';
+  trendData: Array<number> = [];
 
   constructor(private route: ActivatedRoute, 
               private service: SweepService) { }
@@ -44,6 +45,7 @@ export class DeviceComponent implements OnInit {
           console.log(sweep.ambient_temp,sweep.strength)
           this.temperatureData.push(sweep.ambient_temp);
           this.strengthData.push(sweep.strength);
+          this.trendData.push(sweep.trend);
           let formated_time = new Date(sweep.hub_timestamp);
           this.timeStamp.push(formated_time.toLocaleString('en-US'));
         });
