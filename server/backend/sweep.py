@@ -39,10 +39,11 @@ class SweepAPI(Resource):
                 if sweep.strength is not None and sweep.strength > 0:
                     strengths.append({'x': index, 'y': sweep.strength})
 
-            str_df = pd.DataFrame(strengths)
-            A = np.vstack([str_df['x'], np.ones(len(str_df['x']))]).T
-            m, c = np.linalg.lstsq(A, str_df['y'], rcond=None)[0]
-            str_df = str_df.set_index('y')
+            if len(strengths) > 0:
+                str_df = pd.DataFrame(strengths)
+                A = np.vstack([str_df['x'], np.ones(len(str_df['x']))]).T
+                m, c = np.linalg.lstsq(A, str_df['y'], rcond=None)[0]
+                str_df = str_df.set_index('y')
 
         elif args['latest'] is not None:
             device_query = Device.query.order_by(Device.last_updated.desc()).all()
