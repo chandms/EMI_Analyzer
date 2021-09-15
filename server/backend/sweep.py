@@ -75,17 +75,17 @@ class PlotSweep(Resource):
         device_query = Device.query.filter_by(name=device_name).first()
         sweep_query = Sweep.query.filter_by(device_id=device_query.id).order_by(Sweep.hub_time.desc()).all()
 
-        for index, sweep in enumerate(sweep_query):
+        for sweep in sweep_query:
             if sweep.strength is not None and sweep.strength > 0:
-                strengths.append({'x': index, 'y': sweep.strength})
+                strengths.append({'strength': sweep.strength, 'timestamp': sweep.sensor_time})
 
         if len(strengths) > 0:
             str_df = pd.DataFrame(strengths)
-            A = np.vstack([str_df['x'], np.ones(len(str_df['x']))]).T
-            m, c = np.linalg.lstsq(A, str_df['y'], rcond=None)[0]
-            str_lut = str_df.set_index('y').to_dict()
-        
-        print(str_lut)
+            ref_time = str_df['timestamp'].min()
+            str_df['minute_pass'] = (str_df['timestamp'] - ref_time).dt.total_seconds() / 60
+            A = np.vstack([str_df['minute_pass'], np.ones(len(str_df['minute_pass']))]).T
+            m, c = np.linalg.lstsq(A, str_df['strength'], rcond=None)[0]
+       
 
         for sweep in sweep_query:
             sweep_data = sweep.json()
@@ -94,7 +94,8 @@ class PlotSweep(Resource):
                 sweep_data.pop(key_to_remove, None)
 
             if len(strengths) > 0 and sweep.strength > 0:
-                sweep_data['trend'] = round(str_lut['x'][sweep.strength]*m + c, 2)
+                minute_pass = (sweep.sensor_time - ref_time).total_seconds() / 60
+                sweep_data['trend'] = round(minute_pass*m + c, 2)
             else: 
                 sweep_data['trend'] = None
                 
