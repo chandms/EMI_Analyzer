@@ -27,23 +27,11 @@ class SweepAPI(Resource):
         parser.add_argument('device_name')
         args = parser.parse_args()
         sweeps = []
-        strengths = []
 
         if args['device_name'] is not None:
             device_name = args['device_name']
             device_query = Device.query.filter_by(name=device_name).first()
             sweep_query = Sweep.query.filter_by(device_id=device_query.id).order_by(Sweep.hub_time.desc()).all()
-
-            
-            for index, sweep in enumerate(sweep_query):
-                if sweep.strength is not None and sweep.strength > 0:
-                    strengths.append({'x': index, 'y': sweep.strength})
-
-            if len(strengths) > 0:
-                str_df = pd.DataFrame(strengths)
-                A = np.vstack([str_df['x'], np.ones(len(str_df['x']))]).T
-                m, c = np.linalg.lstsq(A, str_df['y'], rcond=None)[0]
-                str_df = str_df.set_index('y')
 
         elif args['latest'] is not None:
             device_query = Device.query.order_by(Device.last_updated.desc()).all()
@@ -70,11 +58,46 @@ class SweepAPI(Resource):
                 sweep.strength = strength
                 db.session.commit()
                 
+            sweeps.append(sweep_data)
+
+        return sweeps
+
+class PlotSweep(Resource):
+
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('device_name', required=True)
+        args = parser.parse_args()
+        sweeps = []
+        strengths = []
+
+        device_name = args['device_name']
+        device_query = Device.query.filter_by(name=device_name).first()
+        sweep_query = Sweep.query.filter_by(device_id=device_query.id).order_by(Sweep.hub_time.desc()).all()
+
+        for index, sweep in enumerate(sweep_query):
+            if sweep.strength is not None and sweep.strength > 0:
+                strengths.append({'x': index, 'y': sweep.strength})
+
+        if len(strengths) > 0:
+            str_df = pd.DataFrame(strengths)
+            A = np.vstack([str_df['x'], np.ones(len(str_df['x']))]).T
+            m, c = np.linalg.lstsq(A, str_df['y'], rcond=None)[0]
+            str_lut = str_df.set_index('y').to_dict()
+        
+        print(str_lut)
+
+        for sweep in sweep_query:
+            sweep_data = sweep.json()
+
+            for key_to_remove in ['device_name', 'device_id', 'rssi', 'server_timestamp', 'hub_timestamp']:
+                sweep_data.pop(key_to_remove, None)
+
             if len(strengths) > 0 and sweep.strength > 0:
-                sweep_data['trend'] = round(str_df.loc[sweep.strength, 'x']*m + c, 2)
+                sweep_data['trend'] = round(str_lut['x'][sweep.strength]*m + c, 2)
             else: 
                 sweep_data['trend'] = None
-
+                
             sweeps.append(sweep_data)
 
         return sweeps
