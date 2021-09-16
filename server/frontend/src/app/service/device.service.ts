@@ -9,6 +9,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment as env } from 'src/environments/environment';
 import { Device } from '../device/device.component';
+import { SweepService } from './sweep.service';
+import { Sweep } from '../sweep/sweep.component';
 
 @Injectable({
   providedIn: 'root'
@@ -17,13 +19,26 @@ import { Device } from '../device/device.component';
 export class DeviceService {
 
   private url = env.backend_url + '/device';
+  constructor(private http: HttpClient,private service: SweepService) { }
 
-  constructor(private http: HttpClient) { }
+  getDeviceDescription(device: Device, latestSweep: Sweep[]){
+    let latestTemp = 0;
+    let latestStrength =0;
+    this.service.getLatestSweep()
+      .subscribe(Response => {
+        latestSweep = Response;
+      })
 
-  getDeviceDescription(device: Device){
+      latestSweep.forEach((sweep: Sweep) => {
+        if(sweep.device_name==device.device_name){
+          latestTemp = sweep.ambient_temp;
+          latestStrength = sweep.strength;
+        }
+      })
+      console.log("Hiiii ",latestSweep)
     let desc = 
-      'device_id : ' +device.device_id+" "+"\n <br> strength info : " +'<a href=\"/device/'+ device.device_name +'\"> '+device.device_name+'</a>'
-      +"\n <br> temperature info : "+'<a href=\"/device-temp/'+ device.device_name +'\"> '+device.device_name+'</a>';
+      'device_id : ' +device.device_id+" "+"\n <br> Strength : "+latestStrength+" psi" +'<a href=\"/device/'+ device.device_name +'\"> '+" More Info" +'</a>'
+      +"\n <br> Temperature : "+latestTemp+" Celcius "+'<a href=\"/device-temp/'+ device.device_name +'\"> '+"More Info"+'</a>';
     return desc;
   }
 

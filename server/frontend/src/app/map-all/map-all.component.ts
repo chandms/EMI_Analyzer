@@ -20,6 +20,8 @@ import { DeviceService } from '../service/device.service';
 import { Device } from '../device/device.component';
 import { ActivatedRoute } from '@angular/router';
 import {toStringHDMS} from 'ol/coordinate';
+import { SweepService } from '../service/sweep.service';
+import { Sweep } from '../sweep/sweep.component';
 
 
 @Component({
@@ -29,17 +31,22 @@ import {toStringHDMS} from 'ol/coordinate';
 })
 export class MapAllComponent implements OnInit {
 
-  constructor(private service: DeviceService,  private route : ActivatedRoute) { }
+  constructor(private service: DeviceService,  private route : ActivatedRoute, private sweepService: SweepService) { }
 
   map!: Map;
   zoom: number = 12;
   latitude: number = 41.079990;
   longitude: number = -85.138601;
   $: any;
+  latestSweep: Sweep[] = [];
 
   
 
   ngOnInit(): void {
+    this.sweepService.getLatestSweep()
+      .subscribe(Response => {
+        this.latestSweep = Response;
+      })
     this.map = new Map({
       target: 'all_device_map',
       layers: [
@@ -71,7 +78,7 @@ export class MapAllComponent implements OnInit {
             })
 
             aFeature.setStyle(aFeatureStyle);
-            aFeature.set('description',this.service.getDeviceDescription(device));
+            aFeature.set('description',this.service.getDeviceDescription(device,this.latestSweep));
             
             markers.push(aFeature);
           }
