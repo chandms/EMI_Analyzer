@@ -64,6 +64,7 @@ export class SweepComponent implements OnInit {
 
 export interface Sweep {
   id: number;
+  device_id: number;
   device_name: string;
   sensor_timestamp: Date | any;
   hub_timestamp: Date;
@@ -73,6 +74,5 @@ export interface Sweep {
   strength: number;
   temperature: number | any;
   ambient_temp: number | any;
-  trend: number | any;
 
 }

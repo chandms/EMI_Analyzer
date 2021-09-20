@@ -78,7 +78,10 @@ export class MapAllComponent implements OnInit {
             })
 
             aFeature.setStyle(aFeatureStyle);
-            aFeature.set('description',this.service.getDeviceDescription(device,this.latestSweep));
+            //console.log("print ",this.service.getDeviceDescription(device,this.latestSweep));
+            let temp: number|any = this.sweepService.getLatestTemp(device,this.latestSweep);
+            let strength: number|any = this.sweepService.getLatestStrength(device,this.latestSweep);
+            aFeature.set('description',this.service.getDeviceDescription(device,temp,strength));
             
             markers.push(aFeature);
           }
@@ -112,14 +115,14 @@ export class MapAllComponent implements OnInit {
             return feature;
           });
           if (feature) {
-            console.log("got a feature");
+           // console.log("got a feature");
             const coordinate = evt.coordinate;
             const hdms = toStringHDMS(toLonLat(coordinate));
         
             container.innerHTML = feature.get('description');
             popup.setPosition(coordinate);
           } else {
-            console.log("not a feature");
+            //console.log("not a feature");
             popup.setPosition(undefined)
           }
         });

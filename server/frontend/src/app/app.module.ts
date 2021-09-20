@@ -23,6 +23,8 @@ import { AuthService } from './service/auth.service';
 import { BackButtonDisableModule } from 'angular-disable-browser-back-button';
 import { DeviceInfoComponent } from './device-info/device-info.component';
 import { DeviceTempComponent } from './device-temp/device-temp.component';
+import { TrendService } from './service/trend.service';
+import { TrendComponent } from './trend/trend.component';
 
 
 @NgModule({
@@ -36,7 +38,8 @@ import { DeviceTempComponent } from './device-temp/device-temp.component';
     LoginComponent,
     HeaderComponent,
     DeviceInfoComponent,
-    DeviceTempComponent
+    DeviceTempComponent,
+    TrendComponent
   ],
   imports: [
     BrowserModule,
@@ -85,7 +88,9 @@ import { DeviceTempComponent } from './device-temp/device-temp.component';
     SweepService,
     DeviceService,
     LoginService,
-    AuthService
+    AuthService,
+    TrendService
+    
   ],
   bootstrap: [AppComponent]
 })
