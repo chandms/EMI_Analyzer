@@ -31,16 +31,16 @@ class SweepAPI(Resource):
         if args['device_name'] is not None:
             device_name = args['device_name']
             device_query = Device.query.filter_by(name=device_name).first()
-            sweep_query = Sweep.query.filter_by(device_id=device_query.id).order_by(Sweep.hub_time.desc()).all()
+            sweep_query = Sweep.query.filter_by(device_id=device_query.id).order_by(Sweep.sensor_time.desc()).all()
 
         elif args['latest'] is not None:
             device_query = Device.query.order_by(Device.last_updated.desc()).all()
             sweep_query = []
             for device in device_query:
-                sweep_query.append(Sweep.query.filter_by(device_id=device.id).order_by(Sweep.hub_time.desc()).first())            
+                sweep_query.append(Sweep.query.filter_by(device_id=device.id).order_by(Sweep.sensor_time.desc()).first())            
 
         else:
-            sweep_query = Sweep.query.order_by(Sweep.hub_time.desc()).all()
+            sweep_query = Sweep.query.order_by(Sweep.sensor_time.desc()).all()
 
         for sweep in sweep_query:
             sweep_data = sweep.json()
@@ -73,7 +73,7 @@ class PlotSweep(Resource):
 
         device_name = args['device_name']
         device_query = Device.query.filter_by(name=device_name).first()
-        sweep_query = Sweep.query.filter_by(device_id=device_query.id).order_by(Sweep.hub_time.desc()).all()
+        sweep_query = Sweep.query.filter_by(device_id=device_query.id).order_by(Sweep.sensor_time.desc()).all()
 
         for sweep in sweep_query:
             if sweep.strength is not None and sweep.strength > 0:
