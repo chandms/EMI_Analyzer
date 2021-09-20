@@ -10,6 +10,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment as env } from 'src/environments/environment';
+import { Device } from '../device/device.component';
 import { Sweep } from '../sweep/sweep.component';
 
 @Injectable({
@@ -36,6 +37,27 @@ export class SweepService {
     return this.http.get<Sweep[]>(this.sweep_url, {params})
   }
 
+  getLatestTemp(device: Device, latestSweep: Sweep[]){
+    let temp =0;
+    latestSweep.forEach((sweep: Sweep) => {
+      if(sweep.device_id==device.device_id){
+        temp = sweep.ambient_temp;
+      }
+    })
+    return temp;
+
+  }
+
+  getLatestStrength(device: Device, latestSweep: Sweep[]){
+    let strength =0;
+    latestSweep.forEach((sweep: Sweep) => {
+      if(sweep.device_id==device.device_id){
+        strength = sweep.strength;
+      }
+    })
+    return strength;
+
+  }
   getDeviceSweeps(device_name: string){
     let params = new HttpParams;
     params = params.append('device_name', device_name);

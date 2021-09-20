@@ -9,6 +9,8 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Label } from 'ng2-charts';
 import { SweepService } from '../service/sweep.service';
+import { TrendService } from '../service/trend.service';
+import { Trend } from '../trend/trend.component';
 import { Sweep } from './../sweep/sweep.component';
 
 @Component({
@@ -19,6 +21,7 @@ import { Sweep } from './../sweep/sweep.component';
 export class DeviceComponent implements OnInit {
 
   sweeps: Sweep[] = [];
+  trends: Trend[] = [];
   deviceName: string = '';
   title: string = '';
   temperatureData: Array<number> = [];
@@ -29,7 +32,8 @@ export class DeviceComponent implements OnInit {
   trendData: Array<number> = [];
 
   constructor(private route: ActivatedRoute, 
-              private service: SweepService) { }
+              private service: SweepService,
+              private trendService: TrendService) { }
 
   ngOnInit(): void {
 
@@ -45,11 +49,19 @@ export class DeviceComponent implements OnInit {
           console.log(sweep.ambient_temp,sweep.strength)
           this.temperatureData.push(sweep.ambient_temp);
           this.strengthData.push(sweep.strength);
-          this.trendData.push(sweep.trend);
           let formated_time = new Date(sweep.hub_timestamp);
           this.timeStamp.push(formated_time.toLocaleString('en-US'));
         });
       })
+
+      this.trendService.getDeviceTrends(this.deviceName)
+        .subscribe(Response => {
+          this.trends = Response;
+          console.log("Trends ",this.trends);
+          this.trends.forEach(trend => {
+            this.trendData.push(trend.trend);
+          });
+        })
       
   }
 
