@@ -37,7 +37,6 @@ export class DeviceComponent implements OnInit {
 
   ngOnInit(): void {
 
-    
     this.deviceName = this.route.snapshot.params.deviceName;
     this.title = 'Concrete Strength'
     this.label = 'strength'
