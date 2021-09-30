@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA  } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
@@ -25,6 +25,14 @@ import { DeviceInfoComponent } from './device-info/device-info.component';
 import { DeviceTempComponent } from './device-temp/device-temp.component';
 import { TrendService } from './service/trend.service';
 import { TrendComponent } from './trend/trend.component';
+import { ProjectsComponent } from './projects/projects.component';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule } from '@angular/material/dialog';
+import { LogoutmodalComponent } from './logoutmodal/logoutmodal.component';
+import { RegistrationComponent } from './registration/registration.component';
+import { RegistrationService } from './service/registration.service';
+import { AlertsModule } from 'angular-alert-module';
+
 
 
 @NgModule({
@@ -39,7 +47,10 @@ import { TrendComponent } from './trend/trend.component';
     HeaderComponent,
     DeviceInfoComponent,
     DeviceTempComponent,
-    TrendComponent
+    TrendComponent,
+    ProjectsComponent,
+    LogoutmodalComponent,
+    RegistrationComponent
   ],
   imports: [
     BrowserModule,
@@ -49,6 +60,9 @@ import { TrendComponent } from './trend/trend.component';
     BrowserAnimationsModule,
     ChartsModule,
     ReactiveFormsModule,
+    MatButtonModule,
+    MatDialogModule,
+    AlertsModule.forRoot(),
     BackButtonDisableModule.forRoot({
       preserveScrollPosition: true
     }),
@@ -80,6 +94,14 @@ import { TrendComponent } from './trend/trend.component';
       {
         path: 'device-temp/:deviceName',
         component: DeviceTempComponent
+      },
+      {
+        path: 'projects',
+        component: ProjectsComponent
+      },
+      {
+        path: 'registration',
+        component: RegistrationComponent
       }
       
     ])
@@ -89,9 +111,11 @@ import { TrendComponent } from './trend/trend.component';
     DeviceService,
     LoginService,
     AuthService,
-    TrendService
+    TrendService,
+    RegistrationService,
     
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
+  schemas: [ CUSTOM_ELEMENTS_SCHEMA ]
 })
 export class AppModule { }
