@@ -1,10 +1,18 @@
 <app-header></app-header>
 <div style="height: 700px;">
-  <div style="height: 10%;">
-    <button class="btn btn-secondary clickable" [routerLink]="['/sweep']">
-      <i class="bi bi-card-list" style="margin-top: 10px;"></i>Sweep Content
-    </button>
+  <div style="display: flex;">
+    <div style="height: 10%;">
+      <button class="btn btn-primary clickable" [routerLink]="['/sweep']">
+        <i class="bi bi-card-list" style="margin-top: 10px;"></i>Sweep Content
+      </button>
+    </div>
+    <div style="height: 10%; margin-left: 20px;">
+      <button class="btn btn-dark clickable" [routerLink]="['/projects']">
+        <i class="bi bi-backspace" style="margin-top: 10px;"></i>Back
+      </button>
+    </div>
   </div>
+  
   <div class="map" id="all_device_map" style="height: 90%;">
       <div id="popup"  class="ol-popup"></div>  
   </div>

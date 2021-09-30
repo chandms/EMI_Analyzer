@@ -7,18 +7,21 @@ import jwt_decode from "jwt-decode";
 import { AuthService } from '../service/auth.service';
 import { LoginService } from '../service/login.service';
 import { User } from './User';
+import { AlertsService } from 'angular-alert-module';
+
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.css'],
+  
 })
 export class LoginComponent implements OnInit {
 
 
 
 
-  constructor(private service : LoginService, private route : Router, private authService : AuthService) {
+  constructor(private service : LoginService, private route : Router, private authService : AuthService, private alerts: AlertsService) {
    }
 
   ngOnInit(): void {
@@ -37,7 +40,7 @@ export class LoginComponent implements OnInit {
         this.user = jwt_decode(Response.token);
         if(this.username.value && this.password.value){
         sessionStorage.setItem('user', JSON.stringify(this.user));
-        this.route.navigateByUrl('/map-devices',{state: jwt_decode(Response.token) });
+        this.route.navigateByUrl('/projects',{state: jwt_decode(Response.token) });
         }
        
        
@@ -45,7 +48,7 @@ export class LoginComponent implements OnInit {
       (error: Response) => {
         console.log(error.status);
         console.log(error.statusText)
-        alert("Error in login ")
+        this.alerts.setMessage('Error in login','error');
       })
     }
 }
