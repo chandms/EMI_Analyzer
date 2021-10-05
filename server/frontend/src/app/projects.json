@@ -1,0 +1,122 @@
+[
+    {
+        "id": 1,
+        "name": "Purdue University",
+        "location": "IN",
+        "sensors":4
+    },
+    {
+        "id": 2,
+        "name": "IUPUI",
+        "location": "IN",
+        "sensors":5
+    },
+    {
+        "id": 3,
+        "name": "Purdue Fort Wayne",
+        "location": "IN",
+        "sensors":2
+    },
+    {
+        "id": 4,
+        "name": "ABC",
+        "location": "WR",
+        "sensors":8
+    },
+    {
+        "id": 5,
+        "name": "DEF",
+        "location": "WE",
+        "sensors":1
+    },
+     {
+        "id": 1,
+        "name": "Purdue University",
+        "location": "IN",
+        "sensors":4
+    },
+    {
+        "id": 2,
+        "name": "IUPUI",
+        "location": "IN",
+        "sensors":5
+    },
+    {
+        "id": 3,
+        "name": "Purdue Fort Wayne",
+        "location": "IN",
+        "sensors":2
+    },
+    {
+        "id": 4,
+        "name": "ABC",
+        "location": "WR",
+        "sensors":8
+    },
+    {
+        "id": 5,
+        "name": "DEF",
+        "location": "WE",
+        "sensors":1
+    },
+     {
+        "id": 1,
+        "name": "Purdue University",
+        "location": "IN",
+        "sensors":4
+    },
+    {
+        "id": 2,
+        "name": "IUPUI",
+        "location": "IN",
+        "sensors":5
+    },
+    {
+        "id": 3,
+        "name": "Purdue Fort Wayne",
+        "location": "IN",
+        "sensors":2
+    },
+    {
+        "id": 4,
+        "name": "ABC",
+        "location": "WR",
+        "sensors":8
+    },
+    {
+        "id": 5,
+        "name": "DEF",
+        "location": "WE",
+        "sensors":1
+    },
+     {
+        "id": 1,
+        "name": "Purdue University",
+        "location": "IN",
+        "sensors":4
+    },
+    {
+        "id": 2,
+        "name": "IUPUI",
+        "location": "IN",
+        "sensors":5
+    },
+    {
+        "id": 3,
+        "name": "Purdue Fort Wayne",
+        "location": "IN",
+        "sensors":2
+    },
+    {
+        "id": 4,
+        "name": "ABC",
+        "location": "WR",
+        "sensors":8
+    },
+    {
+        "id": 5,
+        "name": "DEF",
+        "location": "WE",
+        "sensors":1
+    }
+]

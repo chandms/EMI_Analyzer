@@ -40,7 +40,7 @@ export class LoginComponent implements OnInit {
         this.user = jwt_decode(Response.token);
         if(this.username.value && this.password.value){
         sessionStorage.setItem('user', JSON.stringify(this.user));
-        this.route.navigateByUrl('/projects',{state: jwt_decode(Response.token) });
+        this.route.navigateByUrl('/proj',{state: jwt_decode(Response.token) });
         }
        
        

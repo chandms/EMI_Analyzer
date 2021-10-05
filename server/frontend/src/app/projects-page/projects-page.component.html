@@ -1,0 +1,28 @@
+<app-header></app-header>
+<div style="margin-top: 50px; margin-left: 50px; margin-right: 20px">
+	<div style="float: left; width: 40%">
+		<ul class="list-group" >
+		   <li class="list-group-item">Projects</li>
+			  <li class="list-group-item list-group-item" (click)="openProjModal(project.id,project.name,project.location,project.sensors)" *ngFor="let project of projects; even as isEven " [ngStyle]="{ background: isEven ? 'lightblue' : 'white' }">
+			  	<div >
+			  		<div style="float: left">{{ project.id }}</div>
+			  		<div style="float: right">{{project.name}}</div>
+			  	</div>
+	  		</li>
+
+		</ul>
+		
+	</div>
+	<div  style="float: right">
+		<div>
+		<button type="button" class="btn btn-success" (click)="openModal()">Add Project</button>
+		</div>
+		<br><br>
+		<div >
+			<button type="button" class="btn btn-primary" [routerLink]="['/map-devices']" >Map & Devices</button>
+		</div>
+	</div>
+	
+	<app-alerts></app-alerts>
+</div>
+
