@@ -32,6 +32,9 @@ import { LogoutmodalComponent } from './logoutmodal/logoutmodal.component';
 import { RegistrationComponent } from './registration/registration.component';
 import { RegistrationService } from './service/registration.service';
 import { AlertsModule } from 'angular-alert-module';
+import { ProjectsPageComponent } from './projects-page/projects-page.component';
+import { ProjModalComponent } from './proj-modal/proj-modal.component';
+import { ProjectDescModalComponent } from './project-desc-modal/project-desc-modal.component';
 
 
 
@@ -50,7 +53,10 @@ import { AlertsModule } from 'angular-alert-module';
     TrendComponent,
     ProjectsComponent,
     LogoutmodalComponent,
-    RegistrationComponent
+    RegistrationComponent,
+    ProjectsPageComponent,
+    ProjModalComponent,
+    ProjectDescModalComponent
   ],
   imports: [
     BrowserModule,
@@ -102,6 +108,10 @@ import { AlertsModule } from 'angular-alert-module';
       {
         path: 'registration',
         component: RegistrationComponent
+      },
+      {
+        path: 'proj',
+        component: ProjectsPageComponent
       }
       
     ])

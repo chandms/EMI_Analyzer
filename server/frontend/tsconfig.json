@@ -16,7 +16,11 @@
     "importHelpers": true,
     "target": "es2017",
     "module": "es2020",
+    "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
+    "types": [
+      "webpack-env"
+    ],
     "lib": [
       "es2018",
       "dom"
