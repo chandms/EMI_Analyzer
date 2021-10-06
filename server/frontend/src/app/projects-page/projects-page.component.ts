@@ -14,15 +14,22 @@ import { ProjectDescModalComponent } from '../project-desc-modal/project-desc-mo
 export class ProjectsPageComponent implements OnInit {
 
   
-  public projects:{id:any, name:any, location:any, sensors:any}[] = (data as any).default;
+  
+  public projects:{id:any, name:any, location:any, sensors:any}[];
   
 
-  constructor(public matDialog: MatDialog, private alerts: AlertsService) { }
+  constructor(public matDialog: MatDialog, private alerts: AlertsService) { 
+  	this.projects = JSON.parse(localStorage.getItem('projects'));
+  	if(!this.projects){
+  		this.projects =(data as any).default;
+  		this.projects.push({"id":99,"name":"CM","location":"WL","sensors":23 });
+  		localStorage.setItem('projects',JSON.stringify(this.projects))
+  	}
+  }
 
   ngOnInit(): void {
-  	console.log(data)
-  	this.projects.push({"id":99,"name":"CM","location":"WL","sensors":23 });
-  	localStorage.setItem('projects',JSON.stringify(this.projects))
+  	this.projects = JSON.parse(localStorage.getItem('projects'));
+  	
 
   }
 
