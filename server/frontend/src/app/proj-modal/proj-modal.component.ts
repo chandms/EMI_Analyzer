@@ -22,18 +22,24 @@ export class ProjModalComponent implements OnInit {
 
   	console.log(this.projname.value, this.projloc.value);
   	let val = this.projname.value + " added"
-  	//var proj = localStorage.getItem('project')
-  	//localStorage.setItem('project', this.projname.value);
-    this.closeModal();
+
   	if(this.projname.value.length!=0)
     {
 
   		this.alerts.setMessage(val,'success');
       var proj = JSON.parse(localStorage.getItem('projects'))
-      proj.append({"id":1000,"name":this.projname.value,"location":this.projloc.value})
-      localStorage.setItem('projects',JSON.stringify(proj))
+
+      var resultArray = Object.keys(proj).map(function(pr){
+          let pro = proj[pr];
+    return pro;
+      });
+
+
+      resultArray.push({"id":1000,"name":this.projname.value,"location":this.projloc.value, "sensors":1})
+      localStorage.setItem('projects',JSON.stringify(resultArray))
     }
-    
+    this.closeModal();    
+    window.location.reload();
   }
 
   closeModal() {
