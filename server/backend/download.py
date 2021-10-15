@@ -8,6 +8,7 @@ Description: API for manage sweep download.
 import yaml
 from flask import send_file
 from flask_restful  import Resource, reqparse
+from pytz import timezone
 from pathlib import Path
 from models import Sweep
 from log import logger
@@ -27,7 +28,12 @@ class DownloadHandler(Resource):
         logger.info(f'Request for sweep id {sweep_id}.')
         if sweep is not None:
             filepath = path / sweep.filename
-            return send_file(filepath, as_attachment=True)
+            download_name = f'{sweep.devices.name}-' \
+                            f'{sweep.sensor_time.astimezone(timezone("US/East-Indiana")).isoformat()[:-6]}.csv'
+            return send_file(filepath, 
+                             as_attachment=True, 
+                             download_name=download_name,
+                             mimetype='application/x-csv')
         
         else: 
             logger.error(f'sweep id {sweep_id} is not found.')
