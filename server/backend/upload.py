@@ -32,6 +32,7 @@ class UploadHandler(Resource):
         parser.add_argument('hub_time', required=True)
         parser.add_argument('sensor_time', required=True)
         parser.add_argument('temperature', required=True)
+        parser.add_argument('ambient_temp')
         parser.add_argument('rssi')
         args = parser.parse_args()
         hub_timestamp = datetime.fromisoformat(args['hub_time'])
@@ -50,11 +51,11 @@ class UploadHandler(Resource):
 
         else:
             logger.info(f'{device} found.')
-            # if device.last_updated < sensor_timestamp:
-            #     device.last_updated = sensor_timestamp
+            if device.last_updated < sensor_timestamp:
+                device.last_updated = sensor_timestamp
             # Temporary using hub timestamp since sensor tiemstamp has bug
-            if device.last_updated < hub_timestamp:
-                device.last_updated = hub_timestamp
+            # if device.last_updated < hub_timestamp:
+            #     device.last_updated = hub_timestamp
         
         # save file
         upload_file = args['file']
@@ -67,6 +68,8 @@ class UploadHandler(Resource):
             sensor_time = sensor_timestamp,
             temperature = args['temperature']
         )
+        if args['ambient_temp'] is not None:
+             sweep_meta.ambient_temp = args['ambient_temp']
         device.sweeps.append(sweep_meta)
         db.session.add(sweep_meta)
         logger.info(f'{sweep_meta} recorded into database.')
