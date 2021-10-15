@@ -16,7 +16,7 @@ export class HeaderComponent implements OnInit {
 
   ngOnInit(): void {
       this.user = JSON.parse(sessionStorage.getItem('user'));
-      console.log("user "+this.user.firstname+" "+this.user.lastname)
+     // console.log("user "+this.user.firstname+" "+this.user.lastname)
   }
 
   openModal() {

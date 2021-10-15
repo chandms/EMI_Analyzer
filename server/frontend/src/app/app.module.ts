@@ -35,6 +35,7 @@ import { AlertsModule } from 'angular-alert-module';
 import { ProjectsPageComponent } from './projects-page/projects-page.component';
 import { ProjModalComponent } from './proj-modal/proj-modal.component';
 import { ProjectDescModalComponent } from './project-desc-modal/project-desc-modal.component';
+import { SensorsComponent } from './sensors/sensors.component';
 
 
 
@@ -56,7 +57,8 @@ import { ProjectDescModalComponent } from './project-desc-modal/project-desc-mod
     RegistrationComponent,
     ProjectsPageComponent,
     ProjModalComponent,
-    ProjectDescModalComponent
+    ProjectDescModalComponent,
+    SensorsComponent
   ],
   imports: [
     BrowserModule,
@@ -112,6 +114,10 @@ import { ProjectDescModalComponent } from './project-desc-modal/project-desc-mod
       {
         path: 'proj',
         component: ProjectsPageComponent
+      },
+      {
+        path: 'sensors/:sensors',
+        component: SensorsComponent
       }
       
     ])

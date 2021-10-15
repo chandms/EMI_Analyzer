@@ -34,8 +34,9 @@ export class ProjModalComponent implements OnInit {
     return pro;
       });
 
-
-      resultArray.push({"id":1000,"name":this.projname.value,"location":this.projloc.value, "sensors":1})
+      var currentId: number = Number(localStorage.getItem('nextId'));
+      resultArray.push({"id":currentId,"name":this.projname.value,"location":this.projloc.value, "sensors":0})
+      localStorage.setItem('nextId',String(currentId+1))
       localStorage.setItem('projects',JSON.stringify(resultArray))
     }
     this.closeModal();    

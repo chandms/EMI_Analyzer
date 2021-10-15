@@ -34,6 +34,8 @@ export class SweepComponent implements OnInit {
         });
       })
 
+      
+
     this.service.getAllSweeps()    
       .subscribe(Response => {
         this.allSweep = Response;
@@ -42,7 +44,11 @@ export class SweepComponent implements OnInit {
           sweep.server_timestamp = new Date(sweep.server_timestamp);
         });
       })
+
+      
   }
+
+
 
   download(sweep: Sweep) {
     this.service.downloadSweep(sweep.id)

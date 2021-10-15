@@ -3,7 +3,7 @@
   <div class="card-body">
     <h5 class="card-title">{{ projname }}</h5>
     <p class="card-text">Location: {{ projloc }}</p>
-    <p class="card-text">No of Sensors: {{ sensors }}</p>
+    <button type="button" class="btn btn-primary clickable" (click)="closeModal()" [routerLink]="['sensors', sensors]">No of Sensors: {{ sensors }}</button>
   </div>
   <button mat-raised-button id="modal-cancel-button" (click)="closeModal()"style="float: right">Return
     </button>

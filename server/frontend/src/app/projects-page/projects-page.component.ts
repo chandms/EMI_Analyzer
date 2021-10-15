@@ -22,7 +22,9 @@ export class ProjectsPageComponent implements OnInit {
   	this.projects = JSON.parse(localStorage.getItem('projects'));
   	if(!this.projects){
   		this.projects =(data as any).default;
-  		this.projects.push({"id":99,"name":"CM","location":"WL","sensors":23 });
+  		//this.projects.push({"id":99,"name":"CM","location":"WL","sensors":23 });
+      var currentIndex = this.projects[this.projects.length-1].id;
+      localStorage.setItem('nextId',currentIndex+1);
   		localStorage.setItem('projects',JSON.stringify(this.projects))
   	}
   }
@@ -50,8 +52,8 @@ export class ProjectsPageComponent implements OnInit {
     // The user can't close the dialog by clicking outside its body
     dialogConfig.disableClose = true;
     dialogConfig.id = "app-project-desc-modal";
-    dialogConfig.height = "400px";
-    dialogConfig.width = "500px";
+    dialogConfig.height = "450px";
+    dialogConfig.width = "450px";
     dialogConfig.data = {
     	id: id,
     	name: name,
