@@ -12,7 +12,7 @@ from dotenv import dotenv_values
 
 from models import db
 from upload import UploadHandler
-from download import DownloadHandler
+from download import DownloadHandler, ParameterDownloader
 from sweep import SweepAPI, SweepManual, PlotSweep
 from device import DeviceAPI
 from user import LoginAPI, CreateUserAPI
@@ -34,11 +34,14 @@ api = Api(app)
 api.add_resource(UploadHandler, '/upload')
 api.add_resource(SweepAPI, '/sweep')
 api.add_resource(DownloadHandler, '/download')
+api.add_resource(ParameterDownloader, '/download/parameter')
 api.add_resource(DeviceAPI, '/device')
 api.add_resource(LoginAPI, '/authentication') 
 api.add_resource(CreateUserAPI, '/create_user') 
 api.add_resource(SweepManual, '/add_sweep') 
 api.add_resource(PlotSweep, '/plot_data')
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
