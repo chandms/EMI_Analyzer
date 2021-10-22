@@ -22,6 +22,7 @@ export class SweepService {
 
   private sweep_url = env.backend_url + '/sweep';
   private download_url = env.backend_url + '/download';
+  private download_url_csv = env.backend_url + '/download/parameter';
 
   constructor(private http: HttpClient) { 
     
@@ -68,6 +69,15 @@ export class SweepService {
     let params = new HttpParams;
     params = params.append('id', sweepID);
     return this.http.get(this.download_url, {
+      responseType: 'blob',
+      params: params
+    });
+  }
+
+  downloadSweepCsv(device_name: string): Observable<Blob> {
+    let params = new HttpParams;
+    params = params.append('device_name', device_name);
+    return this.http.get(this.download_url_csv, {
       responseType: 'blob',
       params: params
     });

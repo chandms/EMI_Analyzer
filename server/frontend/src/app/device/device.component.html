@@ -11,7 +11,7 @@
     </strength-chart>
 
     <div>
-        <button class="btn btn-dark clickable" [routerLink]="['/map-devices']" style="margin-right: 20px;">
+        <button class="btn btn-dark clickable" [routerLink]="['/sweep']" style="margin-right: 20px;">
             <i class="bi bi-backspace" style="margin-right: 10px;"></i>Back
         </button>
 
@@ -19,8 +19,11 @@
             <i class="bi bi-pin-map" style="margin-right: 10px;"></i>Location
         </button>
 
-        <button class="btn btn-secondary clickable" [routerLink]="['/device-info',deviceName]">
+        <button class="btn btn-secondary clickable" [routerLink]="['/device-info',deviceName]" style="margin-right: 20px">
             <i class="bi bi-card-list" style=" margin-right: 10px;"></i>{{ deviceName }}
+        </button>
+        <button class="btn btn-primary clickable" [routerLink]="['/device-temp',deviceName]">
+            <i class="bi bi-card-list" style=" margin-right: 10px;"></i>Temperature Information
         </button>
     </div>
 

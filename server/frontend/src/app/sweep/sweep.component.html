@@ -22,7 +22,8 @@
                 <th class="center">Temperature (Fahrenheit) </th>
                 <th class="center">Ambient Temperature (Fahrenheit) </th>
                 <th class="center">RSSI</th>
-                <th class="center">Download</th>
+                <th class="center">Download Raw</th>
+                <th class="center">Download CSV</th>
             </tr>
         </thead>
         <tbody>
@@ -36,6 +37,10 @@
                 <td class="center">
                     <i (click)="download(sweep)" class="bi bi-cloud-download clickable"></i>
                 </td>
+                <td class="center">
+                    <i (click)="download_csv(sweep)" class="bi bi-cloud-download clickable"></i>
+                </td>
+
             </tr>
         </tbody>
     </table>

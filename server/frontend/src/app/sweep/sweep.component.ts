@@ -51,9 +51,18 @@ export class SweepComponent implements OnInit {
 
 
   download(sweep: Sweep) {
+    var file_name = sweep.device_name+"_raw.csv";
     this.service.downloadSweep(sweep.id)
     .subscribe( Response => {
-      saveAs(Response, sweep.filename);
+      saveAs(Response, file_name);
+    });
+  }
+
+  download_csv(sweep: Sweep) {
+    var file_name = sweep.device_name+".csv";
+    this.service.downloadSweepCsv(sweep.device_name)
+    .subscribe( Response => {
+      saveAs(Response, file_name);
     });
   }
 
