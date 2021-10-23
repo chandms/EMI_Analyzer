@@ -28,14 +28,41 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 
 ## Current Website:
 
-<div style="display: flex;">
-	<img src="1.png"
+
+<img src="1.png"
      alt="Markdown Monster icon"
-     style="float: left; margin-right: 10px; height: 40%; width: 40%; " />
+     style="float: left; margin-right: 10px; height: 40%; width: 50%; " />
 
 
 <img src="2.png"
      alt="Markdown Monster icon"
-     style="float: left; margin-right: 10px; height: 40%; width: 40%;" />
-</div>
+     style="float: left; margin-right: 10px; height: 40%; width: 50%;" />
+
+<img src="3.png"
+     alt="Markdown Monster icon"
+     style="float: left; margin-right: 10px; height: 40%; width: 50%;" />
+
+<img src="4.png"
+     alt="Markdown Monster icon"
+     style="float: left; margin-right: 10px; height: 40%; width: 50%;" />
+
+<img src="5.png"
+     alt="Markdown Monster icon"
+     style="float: left; margin-right: 10px; height: 40%; width: 50%;" />
+
+<img src="6.png"
+     alt="Markdown Monster icon"
+     style="float: left; margin-right: 10px; height: 40%; width: 50%;" />
+
+<img src="7.png"
+     alt="Markdown Monster icon"
+     style="float: left; margin-right: 10px; height: 40%; width: 50%;" />
+
+<img src="8.png"
+     alt="Markdown Monster icon"
+     style="float: left; margin-right: 10px; height: 40%; width: 50%;" />
+
+<img src="9.png"
+     alt="Markdown Monster icon"
+     style="float: left; margin-right: 10px; height: 40%; width: 50%;" />
 
