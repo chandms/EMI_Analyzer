@@ -28,7 +28,7 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 
 ## Current Website:
 
-<div>
+<div style="display: flex;">
 	<img src="1.png"
      alt="Markdown Monster icon"
      style="float: left; margin-right: 10px; height: 40%; width: 40%; " />
