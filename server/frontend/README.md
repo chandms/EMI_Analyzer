@@ -28,6 +28,11 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 
 ## Current Website:
 
-<img src="/Current_Project_Images/1.png"
+<img src="../Current_Project_Images/1.png"
+     alt="Markdown Monster icon"
+     style="float: left; margin-right: 10px;" />
+
+
+<img src="../Current_Project_Images/2.png"
      alt="Markdown Monster icon"
      style="float: left; margin-right: 10px;" />
