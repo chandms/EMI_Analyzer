@@ -28,7 +28,8 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 
 ## Current Website:
 
-<img src="1.png"
+<div>
+	<img src="1.png"
      alt="Markdown Monster icon"
      style="float: left; margin-right: 10px; height: 40%; width: 40%; " />
 
@@ -36,3 +37,5 @@ To get more help on the Angular CLI use `ng help` or go check out the [Angular C
 <img src="2.png"
      alt="Markdown Monster icon"
      style="float: left; margin-right: 10px; height: 40%; width: 40%;" />
+</div>
+
